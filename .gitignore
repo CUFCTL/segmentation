@@ -1,0 +1,17 @@
+__pycache__/
+.vscode
+
+# Exclude the segmented images created during evaluation
+segmentation/models/swiftnet/configs/out/*
+
+# Exclude the onnx models
+segmentation/inference/models/*
+TensorRT/models/*
+
+# Ignore datasets folder except certain folders/files (!)
+segmentation/models/swiftnet/datasets/*
+!segmentation/models/swiftnet/datasets/.gitkeep
+
+# Ignore weights folder except certain folders/files (!)
+segmentation/models/swiftnet/weights/*
+!segmentation/models/swiftnet/weights/.gitkeep
