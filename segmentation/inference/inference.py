@@ -4,9 +4,13 @@ The dimensions of the image/video to inference need to match the input dimension
 If the dimensions differ, recreate the onnx model using the convert_to_onnx.py in the swiftnet directory and
 set the dimensions to the intended image/video dimensions.
 
+Make sure you have the ONNX Runtime GPU version installed 'onnxruntime-gpu'.
+
 Set up:
     1. In the main() function change the 'model_path' variable to the location of the onnx file
     2. If you areinferencing on an image, change the 'image_path' path variable in the main function
+    3. Set the 'device_id' variable to the desired GPU 
+       - Run the 'nvidia-smi' command to see which GPUs are avaible and their device id's
 
 Usage: python inference.py <mode>
     - <mode> is either 'video' or 'image' based on what you want to inference
@@ -14,7 +18,7 @@ Usage: python inference.py <mode>
 """
 import argparse
 import onnx
-import onnxruntime
+import onnxruntime as ort # make sure it is the gpu version or else it will be using the cpu
 from PIL import Image
 import torchvision.transforms as transforms
 import torch
@@ -91,15 +95,31 @@ def main():
     color_info = Cityscapes.color_info
     to_color = ColorizeLabels(color_info)
 
-    # Set up ORT
-    # Check that the ONNX model is valid
     model_path = 'models/model_best_single_input_h480_w640.onnx'
 
+    # Check that the ONNX model is valid
     onnx_model = onnx.load(model_path)
     onnx.checker.check_model(onnx_model)
 
-    ort_session = onnxruntime.InferenceSession(model_path)
-    
+
+    processor = ort.get_device()
+    device_id = 0
+    print(f'Using {processor} : {device_id}')
+
+    providers = [
+        ('CUDAExecutionProvider', {
+            'device_id': device_id,
+            'arena_extend_strategy': 'kNextPowerOfTwo',
+            'gpu_mem_limit': 2 * 1024 * 1024 * 1024,
+            'cudnn_conv_algo_search': 'EXHAUSTIVE',
+            'do_copy_in_default_stream': True,
+        }),
+        'CPUExecutionProvider',
+    ]
+
+    # Set up ORT
+    ort_session = ort.InferenceSession(model_path, providers=providers)
+
     mode = args.mode 
     if mode == 'video':
         print('Inferencing on live video stream')
