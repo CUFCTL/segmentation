@@ -56,7 +56,7 @@ def preprocess(pil_img):
     return trans_img
 
 
-def inference_video(session, frame):
+def old_inference_video(session, frame):
     processed_img = preprocess(frame)
 
     # Get input data for ort session: {onnx input layer name: data to be inferenced}
@@ -70,17 +70,82 @@ def inference_video(session, frame):
     return pred
 
 
+def inference_video(session, frame):
+    processed_img = preprocess(frame)
+    X_ortvalue = ort.OrtValue.ortvalue_from_numpy(processed_img, 'cuda', 0)
+
+
+    # Get input data for ort session: {onnx input layer name: data to be inferenced}
+    ort_inputs = {session.get_inputs()[0].name: np.array(processed_img)}
+                 #ort_session.get_inputs()[1].name: target_size,
+                 #ort_session.get_inputs()[2].name: image_size}
+    io_binding = session.io_binding()
+    io_binding.bind_input('input', device_type=X_ortvalue.device_name(), device_id=0, element_type=np.float32, shape=X_ortvalue.shape(), buffer_ptr=X_ortvalue.data_ptr())
+    io_binding.bind_output('output', 'cuda')
+
+
+    session.run_with_iobinding(io_binding)
+
+    ort_output = io_binding.get_outputs()[0]
+    logits = ort_output.numpy()
+
+    logits_tensor = torch.from_numpy(logits)
+    _, pred = torch.max(logits_tensor, dim=1)
+    return pred
+
+
 def inference_image(session, image):
+    start = perf_counter()
+    processed_img = preprocess(image)
+    X_ortvalue = ort.OrtValue.ortvalue_from_numpy(processed_img, 'cuda', 0)
+    
+    ort_inputs = {session.get_inputs()[0].name: np.array(processed_img)}
+                 #ort_session.get_inputs()[1].name: target_size,
+                 #ort_session.get_inputs()[2].name: image_size}
+
+    io_binding = session.io_binding()
+    io_binding.bind_input('input', device_type=X_ortvalue.device_name(), device_id=0, element_type=np.float32, shape=X_ortvalue.shape(), buffer_ptr=X_ortvalue.data_ptr())
+    io_binding.bind_output('output', 'cuda')
+
+    session.run_with_iobinding(io_binding)
+
+    ort_output = io_binding.get_outputs()[0]
+    logits = ort_output.numpy()
+
+    #starting  = perf_counter() 
+
+    #np.save('test1', logits)
+
+    logits_tensor = torch.from_numpy(logits)
+    _, pred = torch.max(logits_tensor, dim=1)
+    #pred = np.argmax(logits, axis=1)
+    
+    #ending = perf_counter()
+    #print(f'max time: {ending-starting}')
+
+    return pred
+
+
+def old_inference_image(session, image):
+    start = perf_counter()
     processed_img = preprocess(image)
     
     ort_inputs = {session.get_inputs()[0].name: np.array(processed_img)}
                  #ort_session.get_inputs()[1].name: target_size,
                  #ort_session.get_inputs()[2].name: image_size}
+
     ort_outs = session.run(None, ort_inputs)
 
     logits = ort_outs[0]
-    pred = np.argmax(logits, axis=1).astype(np.uint32)
+    pred = np.argmax(logits, axis=1)#.astype(np.uint32)
+    
     return pred
+
+
+def warm_start(image, ort, num_inferences=5):
+    print('Performing a warm start...')
+    for i in range(num_inferences):
+        dummy_output = inference_image(ort, image)
 
 
 def to_numpy(tensor):
@@ -96,16 +161,16 @@ def main():
     to_color = ColorizeLabels(color_info)
 
     model_path = 'models/model_best_single_input_h480_w640.onnx'
+    #model_path = 'models/model_best_one_input.onnx'
 
     # Check that the ONNX model is valid
     onnx_model = onnx.load(model_path)
     onnx.checker.check_model(onnx_model)
 
-
     processor = ort.get_device()
     device_id = 0
     print(f'Using {processor} : {device_id}')
-
+    
     providers = [
         ('CUDAExecutionProvider', {
             'device_id': device_id,
@@ -116,7 +181,7 @@ def main():
         }),
         'CPUExecutionProvider',
     ]
-
+    
     # Set up ORT
     ort_session = ort.InferenceSession(model_path, providers=providers)
 
@@ -151,18 +216,30 @@ def main():
             cv2.imshow('frame', combined_image)
     elif mode == 'image':
         print('Inferencing on an image')
-        image_path = 'bonn_000023_000019_leftImg8bit.png'
+        #image_path = 'bonn_000023_000019_leftImg8bit.png'
+        image_path = 'frame0.jpg'
+
         pil_img = Image.open(image_path)
 
+        # Warm up the GPU in order to get accurate timings
+        warm_start(pil_img, ort_session, num_inferences=5)
+
+        start_t = perf_counter()
+
         prediction = inference_image(ort_session, pil_img)
-        
+
         colored_pred = to_color(prediction)
         colored_img = Image.fromarray(colored_pred[0], 'RGB') # convert to PIL image
-        #colored_img.save('my.png')
+        end_t = perf_counter()
+
+        fps = 1 / (end_t-start_t)
+        print(f'FPS: {fps:.2f}')
+        print(f'Total time: {end_t-start_t:.2}')
+        
+        colored_img.save(f'segmented_{image_path}')
         colored_img.show()
-
-    
-
+    else:
+        print('Error: Not a valid command line argument.')
 
 
 if __name__ == '__main__':
