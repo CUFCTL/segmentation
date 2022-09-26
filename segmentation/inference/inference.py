@@ -160,8 +160,8 @@ def main():
     color_info = Cityscapes.color_info
     to_color = ColorizeLabels(color_info)
 
-    model_path = 'models/model_best_single_input_h480_w640.onnx'
-    #model_path = 'models/model_best_one_input.onnx'
+    #model_path = 'models/model_best_single_input_h480_w640.onnx'
+    model_path = 'models/model_best_one_input.onnx'
 
     # Check that the ONNX model is valid
     onnx_model = onnx.load(model_path)
@@ -216,8 +216,8 @@ def main():
             cv2.imshow('frame', combined_image)
     elif mode == 'image':
         print('Inferencing on an image')
-        #image_path = 'bonn_000023_000019_leftImg8bit.png'
-        image_path = 'frame0.jpg'
+        image_path = 'bonn_000023_000019_leftImg8bit.png'
+        #image_path = 'frame0.jpg'
 
         pil_img = Image.open(image_path)
 
