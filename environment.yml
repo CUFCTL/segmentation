@@ -1,0 +1,12 @@
+name: segmentation
+dependencies:
+        - python=3.8
+        - numpy
+        - pillow
+        - matplotlib
+        - tqdm
+        - opencv-python=4.2
+        - onnxruntime-gpu
+        - onnx
+        - torch
+        - torch-vision
