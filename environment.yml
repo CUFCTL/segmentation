@@ -5,8 +5,8 @@ dependencies:
         - pillow
         - matplotlib
         - tqdm
-        - opencv-python=4.2.0.34
         - onnx
+        #- opencv-python=4.2.0.34
         #- onnxruntime-gpu
         #- torch
         #- torch-vision
