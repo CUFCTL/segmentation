@@ -52,7 +52,7 @@ if __name__ == '__main__':
     conf_path = Path(args.config)
     conf = import_module(args.config)
 
-    #print(f'Current cuda device: {torch.cuda.current_device()}')
+    print(f'Current cuda device: {torch.cuda.current_device()}')
     model = conf.model.cuda()
 
     mode = args.mode
