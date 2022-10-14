@@ -1,6 +1,5 @@
-# FA1p1_Smith
+# Smith_segmentation
 
-Repository for Dr. Smith
+# TODO: Create README
 
 
-conda env create -f environment.yml
