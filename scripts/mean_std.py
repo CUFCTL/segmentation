@@ -31,5 +31,4 @@ for image in tqdm(images_list):
 dataset_mean = running_mean / num_images
 dataset_std = running_std / num_images
 print(f'Dataset Mean: {dataset_mean}')
-print(f'Dataset Standard Deviation: {dataset_std}') # I think i need to square root this value###################
-##################################################################################
+print(f'Dataset Standard Deviation: {dataset_std}')# Might need to square root this value but I do not think I need to
