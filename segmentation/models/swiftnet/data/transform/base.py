@@ -9,7 +9,7 @@ from data.transform.flow_utils import readFlow
 RESAMPLE = pimg.BICUBIC
 RESAMPLE_D = pimg.BILINEAR
 
-__all__ = ['Open', 'OpenVideo', 'SetTargetSize', 'Numpy', 'Tensor', 'detection_collate', 'custom_collate', 'RESAMPLE', 'RESAMPLE_D']
+__all__ = ['Open', 'OpenRellis', 'OpenVideo', 'SetTargetSize', 'Numpy', 'Tensor', 'detection_collate', 'custom_collate', 'RESAMPLE', 'RESAMPLE_D']
 
 
 class Open:
@@ -29,6 +29,35 @@ class Open:
                 example['depth'] = pimg.open(example['depth'])
             if 'labels' in example:
                 ret_dict['labels'] = pimg.open(example['labels'])
+                if self.palette is not None:
+                    ret_dict['labels'].putpalette(self.palette)
+                if self.copy_labels:
+                    ret_dict['original_labels'] = ret_dict['labels'].copy()
+            if 'flow' in example:
+                ret_dict['flow'] = readFlow(example['flow'])
+        except OSError:
+            print(example)
+            raise
+        return {**example, **ret_dict}
+
+
+class OpenRellis:
+    def __init__(self, palette=None, copy_labels=True):
+        self.palette = palette
+        self.copy_labels = copy_labels
+
+    def __call__(self, example: dict):
+        try:
+            ret_dict = {}
+            for k in ['image', 'image_next', 'image_prev']:
+                if k in example:
+                    #ret_dict[k] = pimg.open(example[k]).convert('RGB')
+                    if k == 'image':
+                        ret_dict['target_size'] = example['image'].size#ret_dict['image'].size
+            if 'depth' in example:
+                example['depth'] = pimg.open(example['depth'])
+            if 'labels' in example:
+                ret_dict['labels'] = example['labels']#pimg.open(example['labels'])
                 if self.palette is not None:
                     ret_dict['labels'].putpalette(self.palette)
                 if self.copy_labels:
