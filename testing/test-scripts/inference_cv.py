@@ -1,4 +1,6 @@
-"""Attempting to load onnx model in OpenCV"""
+"""Attempting to load onnx model in OpenCV - Couldn't get the model to load, might
+try in the future with a different model
+"""
 import cv2
 
 onnx_path = 'models/model_best_one_input.onnx'

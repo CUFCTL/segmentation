@@ -1,3 +1,8 @@
+"""Script for testing certain timing operartions
+
+Orginally was investigating to see if torch.tensors find the max index 
+faster than numpy.arrays
+"""
 import torch
 import numpy as np
 from time import perf_counter
