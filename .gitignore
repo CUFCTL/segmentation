@@ -10,12 +10,15 @@ TensorRT/models/*
 
 # Ignore datasets folder except certain folders/files (!)
 models/swiftnet/datasets/*
+!models/swiftnet/datasets/cityscapes/
+!models/swiftnet/datasets/rellis/
 !models/swiftnet/datasets/.gitkeep
-#models/swiftnet/datasets/cityscapes/*
-!models/swiftnet/datasets/cityscapes/.gitkeep
-#models/swiftnet/datasets/rellis/*
-!models/swiftnet/datasets/rellis/.gitkeep
 
+# Ignore everything in dataset subfolders except certain files (!)
+models/swiftnet/datasets/rellis/*
+models/swiftnet/datasets/cityscapes/*
+!models/swiftnet/datasets/rellis/.gitkeep
+!models/swiftnet/datasets/cityscapes/.gitkeep
 
 # Ignore weights folder except certain folders/files (!)
 models/swiftnet/weights/*
