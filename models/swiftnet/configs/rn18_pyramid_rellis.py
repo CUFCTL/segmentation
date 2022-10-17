@@ -25,7 +25,7 @@ path = os.path.abspath(__file__)
 dir_path = os.path.dirname(path) # Path to save segmented images during evaluation (currently set to configs/out)
 root = Path('datasets/rellis') #Path.home() / Path('datasets/Cityscapes')
 
-evaluating = False
+evaluating = True
 live_video = False
 random_crop_size = 768
 

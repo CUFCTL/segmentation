@@ -2,10 +2,11 @@
 Main inference script.
 
 To run inference on a validation/test set:
-    - In configs/rn18_pyramid.py set evaluting=True 
-    - In configs/rn18_pyramid.py set live_video=False 
-    - In configs/rn18_pyramid.py set the target_size and target_size_feats to the shape of the image 
+    - In configuration file set evaluting=True 
+    - In configuration file set live_video=False 
+    - In configuration file set the target_size and target_size_feats to the shape of the image 
       (usually the full size of the image)
+    - In configuration file set model_path to the file path of trained model to inference on
     - In eval.sh uncomment the line with 'static' and comment the line wtih 'live'
     
 
@@ -24,6 +25,7 @@ from pathlib import Path
 import importlib.util
 import numpy as np
 import cv2
+import torch
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
 
@@ -52,7 +54,9 @@ if __name__ == '__main__':
     conf_path = Path(args.config)
     conf = import_module(args.config)
 
-    print(f'Current cuda device: {torch.cuda.current_device()}')
+    current_device = torch.cuda.current_device()
+    print(f'Current cuda device: {current_device}')
+    print(f'Current cuda device name: {torch.cuda.get_device_name(current_device)}')
     model = conf.model.cuda()
 
     mode = args.mode
