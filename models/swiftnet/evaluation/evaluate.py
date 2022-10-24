@@ -98,6 +98,7 @@ def evaluate_semseg_timing(model, data_loader, class_info, observers=(), eval_pe
         eval_per_steps: Evaluate the fps every certain number of steps
     """
     model.eval()
+    n = len(data_loader)
     managers = [torch.no_grad()] + list(observers)
     with contextlib.ExitStack() as stack:
         for ctx_mgr in managers:
@@ -105,21 +106,34 @@ def evaluate_semseg_timing(model, data_loader, class_info, observers=(), eval_pe
         conf_mat = np.zeros((model.num_classes, model.num_classes), dtype=np.uint64)
         torch.cuda.synchronize()  # Wait for all operations to finish so we can begin timing (cuda operations are asynchronous)
         start_t = perf_counter()  
-        for step, batch in tqdm(enumerate(data_loader), total=len(data_loader), disable=True):
+        for step, batch in tqdm(enumerate(data_loader), total=n, disable=True):
             #batch['original_labels'] = batch['original_labels'].numpy().astype(np.uint32)
             logits, additional = model.do_forward(batch, batch['image'].shape[2:4]) # shape[2:4] grabs (H, W)
             # batch['original_labels'] does not exist during live inference so I changed thie to batch['image']
-            pred = torch.argmax(logits.data, dim=1).byte().cpu().numpy().astype(np.uint32)
-            if eval_per_steps == 1:
+            #pred = torch.argmax(logits.data, dim=1).byte().cpu().numpy().astype(np.uint32)
+            # Trying to time exactly like SwiftNet
+            # All of the max value methods below have similar timings
+            # (Keeping the one swift net uses)
+            #pred = torch.argmax(logits.data, dim=1).byte().cpu()
+            #pred = logits.data.argmax(dim=1).byte().cpu()
+            # Not transfering the output back to the cpu speeds up the fps by about 5
+            #pred = torch.argmax(logits.data, dim=1)
+
+            _, pred = logits.max(dim=1)
+            out = pred.data.byte().cpu()
+            if eval_per_steps == 1: 
                 torch.cuda.synchronize()
                 curr_t = perf_counter()
-                print(f'{(1 * 1) / (curr_t - start_t):.2f}fps')
+                print(f'{((step+1) * 1) / (curr_t - start_t):.2f}fps')
             elif step % eval_per_steps == 0 and step > 0: # Check fps every 'eval_per_steps'
                 torch.cuda.synchronize()  # Wait for all operations to finish that are being timed
                 curr_t = perf_counter()
                 # Do not need to reset start_t=0 bc we are dividing into the total number of frames processed
-                print(f'{(step * 1) / (curr_t - start_t):.2f}fps') # The '* 1' represents batch_size I think
+                # step+1 because the first step size will have 1 extra image
+                # then every step after the first will have the correct amount
+                print(f'{((step+1)* 1) / (curr_t - start_t):.2f}fps') # The '* 1' represents batch_size I think
                 # step is the group of each batch size. Ex: 500 test images and batch_size=5 => 100 steps
+        
     return
 
 

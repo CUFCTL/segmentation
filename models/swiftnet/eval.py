@@ -106,7 +106,7 @@ if __name__ == '__main__':
         class_info = conf.dataset_val.class_info
         for loader, name in conf.eval_loaders:
             if args.timing:
-                evaluate_semseg_timing(model, loader, class_info, observers=conf.eval_observers)
+                evaluate_semseg_timing(model, loader, class_info, observers=conf.eval_observers, eval_per_steps=1)
             else: # Default 
                 iou, per_class_iou = evaluate_semseg(model, loader, class_info, observers=conf.eval_observers)
-            print(f'{name}: {iou:.2f}')
+                print(f'{name}: {iou:.2f}')
