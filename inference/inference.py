@@ -6,9 +6,9 @@ set the dimensions to the intended image/video dimensions.
 
 Make sure you have the ONNX Runtime GPU version installed 'onnxruntime-gpu'.
 
-Set up:
+Setup:
     1. In the main() function change the 'model_path' variable to the location of the onnx file
-    2. If you areinferencing on an image, change the 'image_path' path variable in the main function
+    2. If you are inferencing on an image, change the 'image_path' path variable in the main function
     3. Set the 'device_id' variable to the desired GPU 
        - Run the 'nvidia-smi' command to see which GPUs are avaible and their device id's
 
@@ -26,12 +26,12 @@ import numpy as np
 import cv2
 from time import perf_counter
 
-from labels import ColorizeLabels
-from cityscapes import Cityscapes
+from utils.labels import ColorizeLabels
+from utils.cityscapes import Cityscapes
 
 parser = argparse.ArgumentParser()
 # Mode can equal 'image' or 'video'
-parser.add_argument('mode', type=str, help='Inference on an image file (mode=image) or video frames (mode=video).')
+parser.add_argument('mode', type=str, help='Inference on an image file <mode>=image or video frames <mode>=video.')
 
 def preprocess(pil_img):
     """Preprocess an image for inference on SwiftNet. 
@@ -127,6 +127,7 @@ def inference_image(session, image):
 
 
 def old_inference_image(session, image):
+    """Old method of ort inference that is slower than the new method"""
     start = perf_counter()
     processed_img = preprocess(image)
     
@@ -160,8 +161,9 @@ def main():
     color_info = Cityscapes.color_info
     to_color = ColorizeLabels(color_info)
 
-    #model_path = 'models/model_best_single_input_h480_w640.onnx'
-    model_path = 'models/model_best_one_input.onnx'
+    model_path = 'models/model_best_single_input_h480_w640.onnx'
+    #model_path = 'models/model_rellis_h1080_w1920.onnx'
+    #model_path = 'models/model_best_one_input.onnx'
 
     # Check that the ONNX model is valid
     onnx_model = onnx.load(model_path)
@@ -216,8 +218,9 @@ def main():
             cv2.imshow('frame', combined_image)
     elif mode == 'image':
         print('Inferencing on an image')
-        image_path = 'bonn_000023_000019_leftImg8bit.png'
-        #image_path = 'frame0.jpg'
+        #image_path = 'images/GOPR0006_frame.jpg'
+        image_path = 'images/bonn_000023_000019_leftImg8bit.png'
+        #image_path = 'images/frame0.jpg'
 
         pil_img = Image.open(image_path)
 
@@ -236,7 +239,8 @@ def main():
         print(f'FPS: {fps:.2f}')
         print(f'Total time: {end_t-start_t:.2}')
         
-        colored_img.save(f'segmented_{image_path}')
+        image_name = image_path.split('/')[-1]
+        colored_img.save(f'images/segmented_{image_name}')
         colored_img.show()
     else:
         print('Error: Not a valid command line argument.')

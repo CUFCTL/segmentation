@@ -7,7 +7,7 @@ Notes:
 from torch.utils.data import Dataset
 from pathlib import Path
 
-from cityscapes_labels import labels
+from .cityscapes_labels import labels
 
 class_info = [label.name for label in labels if label.ignoreInEval is False]
 color_info = [label.color for label in labels if label.ignoreInEval is False]

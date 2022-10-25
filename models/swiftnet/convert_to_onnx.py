@@ -10,7 +10,10 @@ Set up:
 
 Usage 1: python convert_to_onnx.py configs/rn18_pyramid.py model.onnx
 Usage 2: python convert_to_onnx.py configs/rn18_pyramid.py model.onnx --height 480 --width 640
-            
+
+Note:
+    If the model width or height is specified, those values are appened to the onnx file name
+
 """
 
 import os
@@ -75,7 +78,7 @@ if __name__ == '__main__':
 
     class_info = conf.dataset_val.class_info
     
-    model = conf.model # The model weights, .pt, is loaded inside the config file so we don't need to do it here
+    model = conf.model # The model weights, .pt file, is loaded inside the config file so we don't need to do it here
     print(f'Using batch size of {conf.batch_size}')
 
     file_name = args.onnx_name
