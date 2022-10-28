@@ -161,7 +161,8 @@ def main():
     color_info = Cityscapes.color_info
     to_color = ColorizeLabels(color_info)
 
-    model_path = 'models/model_best_single_input_h480_w640.onnx'
+    #model_path = 'models/model_best_single_input_h480_w640.onnx'
+    model_path = 'models/model_rellis_h1200_w1920.onnx'
     #model_path = 'models/model_rellis_h1080_w1920.onnx'
     #model_path = 'models/model_best_one_input.onnx'
 
@@ -219,8 +220,9 @@ def main():
     elif mode == 'image':
         print('Inferencing on an image')
         #image_path = 'images/GOPR0006_frame.jpg'
-        image_path = 'images/bonn_000023_000019_leftImg8bit.png'
+        #image_path = 'images/bonn_000023_000019_leftImg8bit.png'
         #image_path = 'images/frame0.jpg'
+        image_path = 'images/frame000060-1581623796_349.jpg'
 
         pil_img = Image.open(image_path)
 
