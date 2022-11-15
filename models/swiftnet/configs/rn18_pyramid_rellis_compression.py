@@ -17,15 +17,17 @@ from models.semseg import SemsegModel
 from models.resnet.resnet_pyramid import *
 from models.loss import BoundaryAwareFocalLoss
 
+from train import compression_ratio
 
 from models.util import get_n_params
 
 
+
 path = os.path.abspath(__file__)
 dir_path = os.path.dirname(path) # Path to save segmented images during evaluation (currently set to configs/out)
-root = Path('datasets/rellis') #Path.home() / Path('datasets/Cityscapes')
+root = Path(f'/media/eceftl7/DATA/datasets/compressed_rellis/Rellis_compressed_cr_{compression_ratio}') #Path.home() / Path('datasets/Cityscapes')
 
-evaluating = True
+evaluating = False
 live_video = False
 random_crop_size = 768
 
@@ -33,6 +35,8 @@ if evaluating:
     print('Evaluating on the Rellis-3D dataset\n')
 else:
     print('Training on the Rellis-3D dataset\n')
+    print(f'Train root: {root}/Rellis-3D-camera-split/train')
+    print(f'Validation root: {root}/Rellis-3D-camera-split/test')
 
 
 scale = 1
@@ -84,7 +88,7 @@ else:
          Tensor(),
          ])
 
-# ****Training will evaluate the train set because we do not currently have a validation set****
+# Training will evaluate the train set because we do not currently have a validation set
 dataset_train = Rellis3D(root, train=True, transforms=trans_train)#, subset='train')
 dataset_val = Rellis3D(root, train=False, transforms=trans_val)#, subset='val')
 if evaluating:
@@ -121,7 +125,7 @@ if not evaluating:
     lr_min = 1e-6
     fine_tune_factor = 4
     weight_decay = 1e-4
-    epochs = 250
+    epochs = 100#250
 
     optim_params = [
         {'params': model.random_init_params(), 'lr': lr, 'weight_decay': weight_decay},

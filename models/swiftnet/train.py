@@ -116,6 +116,7 @@ class Trainer:
         if not self.args.dry and not self.args.resume:
             os.makedirs(str(self.experiment_dir), exist_ok=True)
             os.makedirs(str(self.checkpoint_dir), exist_ok=True)
+            # Copy configuration file in the saved model directory so you can look back at your settings for the run
             copy(self.args.config, str(self.experiment_dir / 'config.py'))
         
         # This code block was causing further print statements to not work so I am leaving it out
@@ -135,9 +136,12 @@ class Trainer:
         if not self.args.dry:
             with open(f'{self.experiment_dir}/val_ious.pkl', 'wb') as f:
                 pickle.dump(self.validation_ious, f)
-            dir_iou = Path(self.args.store_dir) / (f'{self.best_iou:.2f}_'.replace('.', '-') + self.name)
+            if self.args.cr:
+                dir_iou = Path(self.args.store_dir) / (f'cr_{self.args.cr}_{self.best_iou:.2f}_'.replace('.', '-') + self.name)
+            else:
+                dir_iou = Path(self.args.store_dir) / (f'{self.best_iou:.2f}_'.replace('.', '-') + self.name)
             if os.path.isdir(dir_iou):
-                shutil.rmtree(dir_iou)
+                shutil.rmtree(dir_iou) # If final dir already exists, remove it before renaming the final
             os.rename(self.experiment_dir, dir_iou)
 
     def train(self):
@@ -194,7 +198,10 @@ class Trainer:
                         self.best_iou = iou
                         self.best_iou_epoch = epoch
                         if not self.args.dry:
-                            copy(self.store_path.format('model'), self.store_path.format('model_best'))
+                            if args.cr:
+                                copy(self.store_path.format('model'), self.store_path.format(f'model_best_cr_{args.cr}'))
+                            else:
+                                copy(self.store_path.format('model'), self.store_path.format('model_best'))
                     print(f'Best mIoU: {self.best_iou:.2f}% (epoch {self.best_iou_epoch})')
 
             except KeyboardInterrupt:
@@ -204,6 +211,7 @@ class Trainer:
 parser = argparse.ArgumentParser(description='Detector train')
 parser.add_argument('config', type=str, help='Path to configuration .py file')
 parser.add_argument('--store_dir', default='saves/', type=str, help='Path to experiments directory')
+parser.add_argument('--cr', type=int, help='Compression ratio for HPC compression project, modifies file names if specified')
 parser.add_argument('--resume', default=None, type=str, help='Path to existing experiment dir')
 parser.add_argument('--no-log', dest='log', action='store_false', help='Turn off logging')
 parser.add_argument('--log', dest='log', action='store_true', help='Turn on train evaluation')
@@ -216,10 +224,17 @@ parser.set_defaults(log=True)
 parser.set_defaults(eval_train=False)
 parser.set_defaults(eval=True)
 
+# used for compression ratio test
+args = parser.parse_args()
+
+if args.cr:
+    compression_ratio = args.cr 
+
 if __name__ == '__main__':
     """Load config file (rn18_pyramid.py), """
-    
-    args = parser.parse_args()
+
+   
+
     conf_path = Path(args.config)
     conf = import_module(args.config)
     
