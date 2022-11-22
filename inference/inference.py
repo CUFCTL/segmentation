@@ -25,6 +25,7 @@ import torch
 import numpy as np
 import cv2
 from time import perf_counter
+import time
 
 from utils.labels import ColorizeLabels
 from utils.cityscapes import Cityscapes
@@ -32,6 +33,11 @@ from utils.cityscapes import Cityscapes
 parser = argparse.ArgumentParser()
 # Mode can equal 'image' or 'video'
 parser.add_argument('mode', type=str, help='Inference on an image file <mode>=image or video frames <mode>=video.')
+parser.add_argument('-r', action='store_true', 
+                          help='Optional flag to inference on a recorded video instead of a live video \
+                                by using \'python inference.py -r video\'. If the flag is provided, the video in the \
+                                \'video_path\' variable is loaded')
+parser.add_argument('--save', action='store_true')
 
 def preprocess(pil_img):
     """Preprocess an image for inference on SwiftNet. 
@@ -161,8 +167,9 @@ def main():
     color_info = Cityscapes.color_info
     to_color = ColorizeLabels(color_info)
 
-    #model_path = 'models/model_best_single_input_h480_w640.onnx'
-    model_path = 'models/model_rellis_h1200_w1920.onnx'
+    model_path = 'models/model_best_single_input_h480_w640.onnx'
+    #model_path = 'models/windows_camera_h720_w1280.onnx'
+    #model_path = 'models/model_rellis_h1200_w1920.onnx'
     #model_path = 'models/model_rellis_h1080_w1920.onnx'
     #model_path = 'models/model_best_one_input.onnx'
 
@@ -172,7 +179,9 @@ def main():
 
     processor = ort.get_device()
     device_id = 0
-    print(f'Using {processor} : {device_id}')
+    print(f'\nUsing {processor} : {device_id}')
+    if processor == 'GPU':
+        print(f'{torch.cuda.get_device_name(device_id)}\n')
     
     providers = [
         ('CUDAExecutionProvider', {
@@ -190,15 +199,24 @@ def main():
 
     mode = args.mode 
     if mode == 'video':
-        print('Inferencing on live video stream')
-         # Set up opencv video stream
-        vid = cv2.VideoCapture(0)
-        
+        # Set up opencv video stream
+        video_path = 'media/outside_riggs_h480_w640.mp4'
+        save_path = 'media/outside_riggs_segmented.mp4'
+        if args.r:
+            print('Inferencing on a recorded video')
+            vid = cv2.VideoCapture(video_path)
+            if args.save:
+                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                writer = cv2.VideoWriter(save_path, fourcc, 20.0, (1280, 480))
+        else:
+            print('Inferencing on live video stream')
+            vid = cv2.VideoCapture(0)
+
         start_t = 0
         while(True):
             
             _, frame = vid.read()
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) # IMPORTANT: do not forget to conver to RGB before inferencing
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) # IMPORTANT: do not forget to convert to RGB before inferencing
             
             k = cv2.waitKey(10)
 
@@ -212,17 +230,22 @@ def main():
             end_t = perf_counter()
             fps = 1 / (end_t-start_t)
             start_t = end_t
-            font = cv2.FONT_HERSHEY_SIMPLEX
             fps_text = f'FPS: {fps:.2f}'# {fps}'
 
-            cv2.putText(combined_image, fps_text, (5, 30), font, 1, (0, 255, 255), 1, cv2.LINE_AA)
+            # BGR
+            box_color = (27, 122, 251)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.rectangle(combined_image, (4, 2), (180,35), box_color, -1)
+            cv2.putText(combined_image, fps_text, (5, 30), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
             cv2.imshow('frame', combined_image)
+            if args.save:
+                writer.write(combined_image)
     elif mode == 'image':
         print('Inferencing on an image')
-        #image_path = 'images/GOPR0006_frame.jpg'
-        #image_path = 'images/bonn_000023_000019_leftImg8bit.png'
-        #image_path = 'images/frame0.jpg'
-        image_path = 'images/frame000060-1581623796_349.jpg'
+        #image_path = 'media/GOPR0006_frame.jpg'
+        #image_path = 'media/bonn_000023_000019_leftImg8bit.png'
+        #image_path = 'media/frame0.jpg'
+        image_path = 'media/frame000060-1581623796_349.jpg'
 
         pil_img = Image.open(image_path)
 
