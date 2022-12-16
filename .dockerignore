@@ -1,0 +1,32 @@
+__pycache__/
+.vscode
+
+# Exclude the segmented images created during evaluation
+models/swiftnet/configs/out/*
+
+# Exclude the onnx models
+inference/models/*
+TensorRT/models/*
+
+# Ignore datasets folder except certain folders/files (!)
+models/swiftnet/datasets/*
+!models/swiftnet/datasets/cityscapes/
+!models/swiftnet/datasets/rellis/
+!models/swiftnet/datasets/.gitkeep
+
+# Ignore everything in dataset subfolders except certain files (!)
+models/swiftnet/datasets/rellis/*
+models/swiftnet/datasets/cityscapes/*
+!models/swiftnet/datasets/rellis/.gitkeep
+!models/swiftnet/datasets/cityscapes/.gitkeep
+
+# Ignore weights folder except certain folders/files (!)
+models/swiftnet/weights/*
+!models/swiftnet/weights/.gitkeep
+
+# Ignore inference models folder except certain folders/files (!)
+inference/weights/*
+!inference/models/.gitkeep
+
+# Ignore all .mp4 videos in the media foler (!)
+inference/media/*.mp4

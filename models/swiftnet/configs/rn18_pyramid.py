@@ -93,7 +93,7 @@ backbone = resnet18(pretrained=True,
                     efficient=False) ############ efficient should = True when not converting to onnx - need to test with this set to False
 model = SemsegModel(backbone, num_classes, k=1, bias=True)
 if evaluating:
-    model_path = 'weights/rn18_pyramid/model_best_one_input.pt'
+    model_path = 'weights/model_cityscapes.pt'
     print(f"\nEvaluating using {model_path.split('/')[-1]}\n")
     model.load_state_dict(torch.load(model_path), strict=False)
 else:
@@ -133,9 +133,14 @@ nw = 4
 #print(dataset_train[0]['image'].shape)
 #print(dataset_train[0]['labels'].shape)
 
+# Cityscapes does not have public labels for the test set during evaluation 
+# the only difference is the batch size. It will still do two runs, one for 
+# the training data and one for the validation data, just wihtout updating 
+# the model. 
 loader_val = DataLoader(dataset_val, batch_size=1, collate_fn=custom_collate, num_workers=nw)
 if evaluating:
     loader_train = DataLoader(dataset_train, batch_size=1, collate_fn=custom_collate, num_workers=nw)
+    
     #loader_train = DataLoader(dataset_val, batch_size=1, collate_fn=custom_collate, num_workers=nw)
 else:
     loader_train = DataLoader(dataset_train, batch_size=batch_size, num_workers=nw, pin_memory=True,

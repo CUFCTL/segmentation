@@ -208,6 +208,13 @@ class ResNet(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
     def _make_layer(self, block, planes, blocks, stride=1, bn_class=nn.BatchNorm2d):
+        """Create a block of ResNet. The loop starts at 1 and not 0 because the first block
+        in every ResNet section in slightly different because it needs to downsample
+        
+        Args:
+            blocks: Number of 'blocks' per section. Resnets have 4 sections, ResNet-18 has 2 blocks
+                    each, therefore blocks in this case is 2 for every call. 
+        """
         downsample = None
         # used for layers 2-4 (downsampling is performed only at the beginning of these layers)
         if stride != 1 or self.inplanes != planes * block.expansion:

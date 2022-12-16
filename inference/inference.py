@@ -52,7 +52,7 @@ def preprocess(pil_img):
         [73.15, 82.90, 72.3] and [47.67, 48.49, 47.73] respectively.
     """
     trans_img = np.array(pil_img, dtype=np.float32)
-    trans_img = np.ascontiguousarray(np.transpose(trans_img, (2, 0, 1)))
+    trans_img = np.ascontiguousarray(np.transpose(trans_img, (2, 0, 1))) # reshapes from (H, W, C) to (C, H, W)
     #img_mean = [73.15, 82.90, 72.3] # 73.15 / 255 = 0.2869, 82.60 / 255 = 0.3239 ... -> [0.2869, 0.3239, 0.2835]
     #img_std = [47.67, 48.49, 47.73]
     #raw_img -= img_mean
@@ -152,7 +152,7 @@ def old_inference_image(session, image):
 def warm_start(image, ort, num_inferences=5):
     print('Performing a warm start...')
     for i in range(num_inferences):
-        dummy_output = inference_image(ort, image)
+        _ = inference_image(ort, image)
 
 
 def to_numpy(tensor):
@@ -243,9 +243,9 @@ def main():
     elif mode == 'image':
         print('Inferencing on an image')
         #image_path = 'media/GOPR0006_frame.jpg'
-        #image_path = 'media/bonn_000023_000019_leftImg8bit.png'
+        image_path = 'media/bonn_000023_000019_leftImg8bit.png'
         #image_path = 'media/frame0.jpg'
-        image_path = 'media/frame000060-1581623796_349.jpg'
+        #image_path = 'media/frame000060-1581623796_349.jpg'
 
         pil_img = Image.open(image_path)
 
@@ -265,7 +265,7 @@ def main():
         print(f'Total time: {end_t-start_t:.2}')
         
         image_name = image_path.split('/')[-1]
-        colored_img.save(f'images/segmented_{image_name}')
+        colored_img.save(f'media/segmented_{image_name}')
         colored_img.show()
     else:
         print('Error: Not a valid command line argument.')
