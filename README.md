@@ -1,7 +1,7 @@
 # Semantic Segmentation for the VIPR Project
 This is our semantic segmentation pipeline for the VIPR project. The repository is capable of training/evaluating semantic segmentation models, generating ONNX files, and performing live inference on a camera feed. Inference supports live video feed, a recorded `.mp4` video, and a single image. Due to the many dependencies, and the requirements of ROS, setup instructions are only included for Docker (GPU enabled).
 
-### Inference Preview of Clemson University's Campus
+### Inference Preview
 https://user-images.githubusercontent.com/34605638/203414948-aea30ddd-0e74-461a-bdc0-b607b3e82f7b.mp4
 
 ### Table of Contents
