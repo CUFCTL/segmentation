@@ -17,7 +17,6 @@ RUN pip install \
         tqdm \
         cityscapesscripts \
         opencv-python==4.1.2.30
-        #opencv-python==4.4.0.40
 
 # Copying source files after installing dependcies to prevent long rebuilds
 COPY inference /app/inference 
