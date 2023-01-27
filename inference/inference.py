@@ -24,20 +24,50 @@ import torchvision.transforms as transforms
 import torch
 import numpy as np
 import cv2
-from time import perf_counter
 import time
 
-from utils.labels import ColorizeLabels
-from utils.cityscapes import Cityscapes
+from utils import color_maps
+
 
 parser = argparse.ArgumentParser()
-# Mode can equal 'image' or 'video'
-parser.add_argument('mode', type=str, help='Inference on an image file <mode>=image or video frames <mode>=video.')
-parser.add_argument('-r', action='store_true', 
-                          help='Optional flag to inference on a recorded video instead of a live video \
-                                by using \'python inference.py -r video\'. If the flag is provided, the video in the \
-                                \'video_path\' variable is loaded')
-parser.add_argument('--save', action='store_true')
+parser.add_argument('--mode',
+    default='video',
+    choices=['video', 'image'],
+    type=str,
+    help='Inference on an image file <mode>=image or video frames <mode>=video.'
+)
+parser.add_argument('--onnx_file',
+    default='models/model_cityscapes.onnx',
+    type=str, 
+    help='Path to onnx file. Ex: models/model_cityscapes.onnx',
+    metavar='' # Helps allign the -h output (puts a blank '' in the example)
+)
+parser.add_argument('-r',
+    action='store_true', 
+    help="""Optional flag to inference on a recorded video instead of a live video 
+            If the flag is provided, the video in the 'video_path' variable is loaded'"""
+)
+parser.add_argument('--image_path',
+    default='media/bonn_000023_000019_leftImg8bit.png',
+    type=str,
+    help="""Path to video file (probably mp4). Only required if the -r flag is specified. 
+            Ex: media/go-pro-1.mp4""",
+    metavar=''
+)
+parser.add_argument('--video_path', 
+    default='media/go-pro-1.MP4',
+    type=str,
+    help="""Path to video file (probalby mp4). Only required if the -r flag is specified. 
+            Ex: media/go-pro-1.mp4""",
+    metavar=''
+)
+parser.add_argument('--cmap',
+    default='cityscapes',
+    choices=['cityscapes', 'rellis'],
+    type=str,
+    help='Color map to be applied to the prediction',
+    metavar=''
+)
 
 def preprocess(pil_img):
     """Preprocess an image for inference on SwiftNet. 
@@ -67,8 +97,6 @@ def old_inference_video(session, frame):
 
     # Get input data for ort session: {onnx input layer name: data to be inferenced}
     ort_inputs = {session.get_inputs()[0].name: np.array(processed_img)}
-                 #ort_session.get_inputs()[1].name: target_size,
-                 #ort_session.get_inputs()[2].name: image_size}
     ort_outs = session.run(None, ort_inputs)
 
     logits = ort_outs[0]
@@ -83,8 +111,6 @@ def inference_video(session, frame):
 
     # Get input data for ort session: {onnx input layer name: data to be inferenced}
     ort_inputs = {session.get_inputs()[0].name: np.array(processed_img)}
-                 #ort_session.get_inputs()[1].name: target_size,
-                 #ort_session.get_inputs()[2].name: image_size}
     io_binding = session.io_binding()
     io_binding.bind_input('input', device_type=X_ortvalue.device_name(), device_id=0, element_type=np.float32, shape=X_ortvalue.shape(), buffer_ptr=X_ortvalue.data_ptr())
     io_binding.bind_output('output', 'cuda')
@@ -101,13 +127,11 @@ def inference_video(session, frame):
 
 
 def inference_image(session, image):
-    start = perf_counter()
+    start = time.time()
     processed_img = preprocess(image)
     X_ortvalue = ort.OrtValue.ortvalue_from_numpy(processed_img, 'cuda', 0)
     
     ort_inputs = {session.get_inputs()[0].name: np.array(processed_img)}
-                 #ort_session.get_inputs()[1].name: target_size,
-                 #ort_session.get_inputs()[2].name: image_size}
 
     io_binding = session.io_binding()
     io_binding.bind_input('input', device_type=X_ortvalue.device_name(), device_id=0, element_type=np.float32, shape=X_ortvalue.shape(), buffer_ptr=X_ortvalue.data_ptr())
@@ -118,28 +142,19 @@ def inference_image(session, image):
     ort_output = io_binding.get_outputs()[0]
     logits = ort_output.numpy()
 
-    #starting  = perf_counter() 
-
-    #np.save('test1', logits)
-
     logits_tensor = torch.from_numpy(logits)
     _, pred = torch.max(logits_tensor, dim=1)
     #pred = np.argmax(logits, axis=1)
     
-    #ending = perf_counter()
-    #print(f'max time: {ending-starting}')
-
     return pred
 
 
 def old_inference_image(session, image):
     """Old method of ort inference that is slower than the new method"""
-    start = perf_counter()
+    start = time.time()
     processed_img = preprocess(image)
     
     ort_inputs = {session.get_inputs()[0].name: np.array(processed_img)}
-                 #ort_session.get_inputs()[1].name: target_size,
-                 #ort_session.get_inputs()[2].name: image_size}
 
     ort_outs = session.run(None, ort_inputs)
 
@@ -155,8 +170,18 @@ def warm_start(image, ort, num_inferences=5):
         _ = inference_image(ort, image)
 
 
-def to_numpy(tensor):
-    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+def colorize(prediction, cmap):
+    """Experimental function - Apply a colormap to a grayscale predicted image """
+    # define empty array of shape [h, w, d] to be populated by colors
+    colored_image = np.zeros((prediction.shape[0], prediction.shape[1], 3), dtype=np.uint8)
+    print(prediction)
+    for label in np.unique(prediction):
+        # 1. Create a truth image, true where the predicted label equals the color map index
+        # 2. Multply by np.tile, this will replace all the true values with cmap[label] value
+        #    and False values remain 0 
+        colored_image += (prediction == label)[:, :, np.newaxis] * \
+            np.tile(cmap[label], (prediction.shape[0], prediction.shape[1], 1))
+    print(colored_image)
 
 
 def main():
@@ -164,14 +189,11 @@ def main():
 
     # Initialize transforms
     print('Setting on ONNX Runtime session...')
-    color_info = Cityscapes.color_info
-    to_color = ColorizeLabels(color_info)
+    # Get color map and convert to BGR (OpenCV requirement)
+    cmap = np.array(color_maps[args.cmap])
+    cmap_bgr = cmap[:,::-1].astype(np.uint8).flatten().tolist()
 
-    model_path = 'models/model_best_single_input_h480_w640.onnx'
-    #model_path = 'models/windows_camera_h720_w1280.onnx'
-    #model_path = 'models/model_rellis_h1200_w1920.onnx'
-    #model_path = 'models/model_rellis_h1080_w1920.onnx'
-    #model_path = 'models/model_best_one_input.onnx'
+    model_path = args.onnx_file
 
     # Check that the ONNX model is valid
     onnx_model = onnx.load(model_path)
@@ -184,7 +206,7 @@ def main():
         print(f'{torch.cuda.get_device_name(device_id)}\n')
     
     providers = [
-        ('CUDAExecutionProvider', {
+        ('CUDAExecutionProvider', { # using default dict params from ONNX documentation
             'device_id': device_id,
             'arena_extend_strategy': 'kNextPowerOfTwo',
             'gpu_mem_limit': 2 * 1024 * 1024 * 1024,
@@ -200,22 +222,22 @@ def main():
     mode = args.mode 
     if mode == 'video':
         # Set up opencv video stream
-        video_path = 'media/outside_riggs_h480_w640.mp4'
-        save_path = 'media/outside_riggs_segmented.mp4'
+        video_path = args.video_path
         if args.r:
             print('Inferencing on a recorded video')
             vid = cv2.VideoCapture(video_path)
-            if args.save:
-                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                writer = cv2.VideoWriter(save_path, fourcc, 20.0, (1280, 480))
         else:
             print('Inferencing on live video stream')
             vid = cv2.VideoCapture(0)
 
         start_t = 0
+        print(video_path)
         while(True):
             
-            _, frame = vid.read()
+            check, frame = vid.read()
+            # Check if frame exists before processing - some of the Go Pro video frames were corrupted
+            if not check:
+                continue
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) # IMPORTANT: do not forget to convert to RGB before inferencing
             
             k = cv2.waitKey(10)
@@ -224,10 +246,14 @@ def main():
             if k == ord('q'):
                 break
             prediction = inference_video(ort_session, frame_rgb)
-            colored_pred = to_color(prediction)
+            # squeeze() removes all axes with length of 1 ... [1, 1080, 1920] => [1080, 1920]
+            # Image modes ('P') defined here: https://pillow.readthedocs.io/en/stable/handbook/concepts.html#concept-modes
+            prediction_pil = Image.fromarray(prediction.numpy().squeeze().astype(np.uint8)).convert('P')
+            prediction_pil.putpalette(cmap_bgr)
             # Combine orginal and segmented image horizontally
-            combined_image = np.concatenate((frame, colored_pred[0]), axis=1)
-            end_t = perf_counter()
+            colored_pred = prediction_pil.convert('RGB')
+            combined_image = np.concatenate((frame, colored_pred), axis=1)
+            end_t = time.time()
             fps = 1 / (end_t-start_t)
             start_t = end_t
             fps_text = f'FPS: {fps:.2f}'# {fps}'
@@ -238,27 +264,22 @@ def main():
             cv2.rectangle(combined_image, (4, 2), (180,35), box_color, -1)
             cv2.putText(combined_image, fps_text, (5, 30), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
             cv2.imshow('frame', combined_image)
-            if args.save:
-                writer.write(combined_image)
     elif mode == 'image':
         print('Inferencing on an image')
-        #image_path = 'media/GOPR0006_frame.jpg'
-        image_path = 'media/bonn_000023_000019_leftImg8bit.png'
-        #image_path = 'media/frame0.jpg'
-        #image_path = 'media/frame000060-1581623796_349.jpg'
+        image_path = args.image_path
 
         pil_img = Image.open(image_path)
 
         # Warm up the GPU in order to get accurate timings
         warm_start(pil_img, ort_session, num_inferences=5)
 
-        start_t = perf_counter()
+        start_t = time.time()
 
         prediction = inference_image(ort_session, pil_img)
 
         colored_pred = to_color(prediction)
         colored_img = Image.fromarray(colored_pred[0], 'RGB') # convert to PIL image
-        end_t = perf_counter()
+        end_t = time.time()
 
         fps = 1 / (end_t-start_t)
         print(f'FPS: {fps:.2f}')
