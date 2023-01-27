@@ -30,4 +30,5 @@ inference/weights/*
 
 # Ignore all .mp4 videos in the media foler (!)
 inference/media/*.mp4
+inference/media/*.MP4
 
