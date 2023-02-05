@@ -20,6 +20,10 @@ models/swiftnet/datasets/cityscapes/*
 !models/swiftnet/datasets/rellis/.gitkeep
 !models/swiftnet/datasets/cityscapes/.gitkeep
 
+# Ignore files in certain HRNET directories 
+models/HRNet-Semantic-Segmentation/data/cityscapes/
+models/HRNet-Semantic-Segmentation/pretrained_models/
+
 # Ignore weights folder except certain folders/files (!)
 models/swiftnet/weights/*
 !models/swiftnet/weights/.gitkeep
