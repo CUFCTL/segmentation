@@ -27,6 +27,7 @@ import cv2
 import time
 
 from utils import color_maps
+from utils import labels
 
 
 parser = argparse.ArgumentParser()
@@ -170,27 +171,15 @@ def warm_start(image, ort, num_inferences=5):
         _ = inference_image(ort, image)
 
 
-def colorize(prediction, cmap):
-    """Experimental function - Apply a colormap to a grayscale predicted image """
-    # define empty array of shape [h, w, d] to be populated by colors
-    colored_image = np.zeros((prediction.shape[0], prediction.shape[1], 3), dtype=np.uint8)
-    print(prediction)
-    for label in np.unique(prediction):
-        # 1. Create a truth image, true where the predicted label equals the color map index
-        # 2. Multply by np.tile, this will replace all the true values with cmap[label] value
-        #    and False values remain 0 
-        colored_image += (prediction == label)[:, :, np.newaxis] * \
-            np.tile(cmap[label], (prediction.shape[0], prediction.shape[1], 1))
-    print(colored_image)
-
-
 def main():
     args = parser.parse_args()
 
     # Initialize transforms
     print('Setting on ONNX Runtime session...')
+
     # Get color map and convert to BGR (OpenCV requirement)
     cmap = np.array(color_maps[args.cmap])
+    label_names = np.array(labels[args.cmap])
     cmap_bgr = cmap[:,::-1].astype(np.uint8).flatten().tolist()
 
     model_path = args.onnx_file
@@ -225,13 +214,29 @@ def main():
         video_path = args.video_path
         if args.r:
             print('Inferencing on a recorded video')
+            print(video_path)
             vid = cv2.VideoCapture(video_path)
         else:
             print('Inferencing on live video stream')
             vid = cv2.VideoCapture(0)
 
+        check, frame = vid.read()
+
+        H, W, C = frame.shape
+        legend = np.full((H, 120, C), 255).astype(np.uint8)
+
+        # Create legend for final visualization
+        (x1, y1), (x2, y2) = (5, 30), (40, 50)
+        for color, label in zip(cmap, label_names):
+            label_colors = (int(color[2]), int(color[1]), int(color[0]))
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.rectangle(legend, (x1, y1), (x2, y2), label_colors, -1)
+            cv2.putText(legend, label, (x1+36, y1+13), font, .5, (0, 0, 0), 0, cv2.LINE_AA)
+            y1 += 20
+            y2 += 20
+
+
         start_t = 0
-        print(video_path)
         while(True):
             
             check, frame = vid.read()
@@ -252,7 +257,7 @@ def main():
             prediction_pil.putpalette(cmap_bgr)
             # Combine orginal and segmented image horizontally
             colored_pred = prediction_pil.convert('RGB')
-            combined_image = np.concatenate((frame, colored_pred), axis=1)
+            combined_image = np.concatenate((frame, colored_pred, legend), axis=1)
             end_t = time.time()
             fps = 1 / (end_t-start_t)
             start_t = end_t
@@ -275,10 +280,13 @@ def main():
 
         start_t = time.time()
 
-        prediction = inference_image(ort_session, pil_img)
-
-        colored_pred = to_color(prediction)
-        colored_img = Image.fromarray(colored_pred[0], 'RGB') # convert to PIL image
+        prediction = inference_video(ort_session, frame_rgb)
+        # squeeze() removes all axes with length of 1 ... [1, 1080, 1920] => [1080, 1920]
+        # Image modes ('P') defined here: https://pillow.readthedocs.io/en/stable/handbook/concepts.html#concept-modes
+        prediction_pil = Image.fromarray(prediction.numpy().squeeze().astype(np.uint8)).convert('P')
+        prediction_pil.putpalette(cmap_bgr)
+        # Combine orginal and segmented image horizontally
+        colored_pred = prediction_pil.convert('RGB')
         end_t = time.time()
 
         fps = 1 / (end_t-start_t)
@@ -286,8 +294,8 @@ def main():
         print(f'Total time: {end_t-start_t:.2}')
         
         image_name = image_path.split('/')[-1]
-        colored_img.save(f'media/segmented_{image_name}')
-        colored_img.show()
+        prediction_pil.save(f'media/segmented_{image_name}')
+        prediction_pil.show()
     else:
         print('Error: Not a valid command line argument.')
 

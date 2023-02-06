@@ -14,7 +14,6 @@ color_maps = {
         [220, 20, 60], # person
         [255,  0,  0], # rider
         [  0,  0,142], # car
-        
         [  0,  0, 70], # truck
         [  0, 60,100], # bus
         [  0, 80,100], # train
@@ -43,5 +42,51 @@ color_maps = {
         [134, 255, 239], # puddle
         [99, 66, 34], # mud
         [110, 22, 138] # rubble
+    ] 
+}
+
+labels = {
+    'cityscapes': [
+        "road",
+        "buidling",
+        "sidewalk",
+        "wall",
+        "fence",
+        "pole",
+        "traffic light",
+        "traffic sign",
+        "vegetation",
+        "terrain",
+        "sky",
+        "person",
+        "rider",
+        "car",
+        "truck",
+        "bus",
+        "train",
+        "motorcycle",
+        "bicyle",
+        "void"
+    ],
+    'rellis': [
+        "void",
+        "grass",
+        "tree",
+        "pole",
+        "water",
+        "sky",
+        "vehicle",
+        "object",
+        "asphalt",
+        "building",
+        "log",
+        "person",
+        "fence",
+        "bush",
+        "concrete",
+        "barrier",
+        "puddle",
+        "mud",
+        "rubble"
     ] 
 }

@@ -32,3 +32,5 @@ inference/weights/*
 inference/media/*.mp4
 inference/media/*.MP4
 
+# Ignoring HRNet as of now
+models/HRNet-Semantic-Segmentation/
