@@ -29,7 +29,7 @@ sudo xhost +si:localuser:root # Enables docker GUI usage
 
 sudo docker run --gpus all -it \
          --ipc host \
-	       --network host \
+	 --network host \
          --env DISPLAY=$DISPLAY \
          bselee/vipr-segmentation:husky-deploy bash
 ```
