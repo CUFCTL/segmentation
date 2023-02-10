@@ -38,7 +38,7 @@ Inside the docker container navigate to the inference directory and launch the s
 ```bash
 cd inference
 python inference-ros.py \
-  --mode video \
+  	--mode video \
 	--onnx_file models/model_cityscapes_h480_w640.onnx \
 	--cmap cityscapes
 
