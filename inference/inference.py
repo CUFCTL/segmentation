@@ -22,11 +22,13 @@ import onnxruntime as ort # make sure it is the gpu version or else it will be u
 from PIL import Image
 import torchvision.transforms as transforms
 import torch
+import torch.nn.functional as F
 import numpy as np
 import cv2
 import time
 
 from utils import color_maps
+from aux_adapt.auxnet import aux_net
 
 
 parser = argparse.ArgumentParser()
@@ -92,6 +94,22 @@ def preprocess(pil_img):
     return trans_img
 
 
+def preprocess_auxnet(image):
+    """Preprocess an image for inference on AuxNet. 
+    """
+    mean = [0.485, 0.456, 0.406]
+    std=[0.229, 0.224, 0.225]
+
+    image = image.astype(np.float32)[:, :, ::-1]
+    image = image / 255.0
+    image -= mean
+    image /= std
+    image = np.transpose(image, (2,0,1))
+    trans_img = np.expand_dims(image, axis=0) # reshapes from (C, H, W) to (B, C, H, W)
+
+    return trans_img
+
+
 def old_inference_video(session, frame):
     processed_img = preprocess(frame)
 
@@ -102,6 +120,44 @@ def old_inference_video(session, frame):
     logits = ort_outs[0]
     pred = np.argmax(logits, axis=1).astype(np.uint32)
     return pred
+
+
+def inference_video_auxnet(session, frame):
+    processed_img = preprocess(frame)
+    X_ortvalue = ort.OrtValue.ortvalue_from_numpy(processed_img, 'cuda', 0)
+
+
+    # Get input data for ort session: {onnx input layer name: data to be inferenced}
+    ort_inputs = {session.get_inputs()[0].name: np.array(processed_img)}
+    io_binding = session.io_binding()
+    io_binding.bind_input('input', device_type=X_ortvalue.device_name(), device_id=0, element_type=np.float32, shape=X_ortvalue.shape(), buffer_ptr=X_ortvalue.data_ptr())
+    
+    
+    Y_shape = (1,19,480,640)
+    Y_tensor = torch.empty(Y_shape, dtype=torch.float32, device='cuda:0').contiguous()
+    #io_binding.bind_output('output', 'cuda')
+
+#################### Try this on main inference function 
+    # Bind output directly to a tensor on a GPU
+    io_binding.bind_output(
+        name='output',
+        device_type='cuda',
+        device_id=0,
+        element_type=np.float32,
+        shape=tuple(Y_tensor.shape),
+        buffer_ptr=Y_tensor.data_ptr(),
+    )
+
+    session.run_with_iobinding(io_binding)
+
+    #print(Y_tensor.shape)
+
+    #ort_output = io_binding.get_outputs()[0]
+    #print(torch.get_device(Y_tensor))
+    #logits = ort_output.numpy()
+
+    
+    return Y_tensor
 
 
 def inference_video(session, frame):
@@ -219,6 +275,11 @@ def main():
     # Set up ORT
     ort_session = ort.InferenceSession(model_path, providers=providers)
 
+
+    # Setting up AuxNet
+    AuxNet, optimizer, criterion = aux_net()
+    AuxNet.train()
+    
     mode = args.mode 
     if mode == 'video':
         # Set up opencv video stream
@@ -245,24 +306,57 @@ def main():
             # Exit video stream by pressing 'q'
             if k == ord('q'):
                 break
-            prediction = inference_video(ort_session, frame_rgb)
+
+            preprocessed_frame = preprocess_auxnet(frame_rgb)
+            logits_tensor = inference_video_auxnet(ort_session, frame_rgb)
+
+            AuxNet.zero_grad()
+            prediction_aux = AuxNet(torch.from_numpy(preprocessed_frame))
+            prediction_aux = F.interpolate(
+                    input=prediction_aux, size=(480, 640), mode='bilinear')
+
+            
+            final_logits = torch.add(logits_tensor, prediction_aux)
+            
+            _, pred_swift = torch.max(logits_tensor, dim=1)
+            _, pred_combination = torch.max(final_logits, dim=1)
+
+            #print(pred.shape)
+
+            losses = criterion(prediction_aux, pred_combination)
+            losses.backward()
+            optimizer.step()
+
             # squeeze() removes all axes with length of 1 ... [1, 1080, 1920] => [1080, 1920]
             # Image modes ('P') defined here: https://pillow.readthedocs.io/en/stable/handbook/concepts.html#concept-modes
-            prediction_pil = Image.fromarray(prediction.numpy().squeeze().astype(np.uint8)).convert('P')
+            prediction_pil = Image.fromarray(pred_combination.cpu().numpy().squeeze().astype(np.uint8)).convert('P')
+            prediction_pil_swift = Image.fromarray(pred_swift.cpu().numpy().squeeze().astype(np.uint8)).convert('P')
             prediction_pil.putpalette(cmap_bgr)
+            prediction_pil_swift.putpalette(cmap_bgr)
             # Combine orginal and segmented image horizontally
             colored_pred = prediction_pil.convert('RGB')
-            combined_image = np.concatenate((frame, colored_pred), axis=1)
+            colored_pred_swift = prediction_pil_swift.convert('RGB')
+            combined_image = np.concatenate((frame, colored_pred_swift, colored_pred), axis=1)
             end_t = time.time()
             fps = 1 / (end_t-start_t)
             start_t = end_t
             fps_text = f'FPS: {fps:.2f}'# {fps}'
 
+            swiftnet_text = 'SwiftNet'
+            swiftnet_auxnet_text = 'SwiftNet+AuxNet'
+
+            # TODO
+            # Downsample input image to auxadapt
+
             # BGR
             box_color = (27, 122, 251)
             font = cv2.FONT_HERSHEY_SIMPLEX
             cv2.rectangle(combined_image, (4, 2), (180,35), box_color, -1)
+            cv2.rectangle(combined_image, (644, 2), (780,35), box_color, -1)
+            cv2.rectangle(combined_image, (1284, 2), (1550,35), box_color, -1)
             cv2.putText(combined_image, fps_text, (5, 30), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
+            cv2.putText(combined_image, swiftnet_text, (650, 30), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
+            cv2.putText(combined_image, swiftnet_auxnet_text, (1290, 30), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
             cv2.imshow('frame', combined_image)
     elif mode == 'image':
         print('Inferencing on an image')

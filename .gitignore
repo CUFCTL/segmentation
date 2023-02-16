@@ -21,8 +21,8 @@ models/swiftnet/datasets/cityscapes/*
 !models/swiftnet/datasets/cityscapes/.gitkeep
 
 # Ignore files in certain HRNET directories 
-models/HRNet-Semantic-Segmentation/data/cityscapes/*
-models/HRNet-Semantic-Segmentation/pretrained_models/*
+models/HRNet_Semantic_Segmentation/data/cityscapes/*
+models/HRNet_Semantic_Segmentation/pretrained_models/*
 
 # Ignore weights folder except certain folders/files (!)
 models/swiftnet/weights/*
@@ -35,4 +35,8 @@ inference/weights/*
 # Ignore all .mp4 videos in the media foler (!)
 inference/media/*.mp4
 inference/media/*.MP4
+
+
+# Ignore files in certain HRNET directories 
+inference/HRNet_Semantic_Segmentation_light_weight/pretrained_models/*
 
