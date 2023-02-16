@@ -39,5 +39,5 @@ inference/media/*.MP4
 
 
 # Ignore files in certain HRNET directories 
-inference/HRNet_Semantic_Segmentation_light_weight/pretrained_models/*
+inference/aux_adapt/HRNet_Semantic_Segmentation_light_weight/pretrained_models/*
 
