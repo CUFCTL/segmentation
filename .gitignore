@@ -23,6 +23,7 @@ models/swiftnet/datasets/cityscapes/*
 # Ignore files in certain HRNET directories 
 models/HRNet_Semantic_Segmentation/data/cityscapes/*
 models/HRNet_Semantic_Segmentation/pretrained_models/*
+models/HRNet_Semantic_Segmentation/output/cityscapes/*
 
 # Ignore weights folder except certain folders/files (!)
 models/swiftnet/weights/*
