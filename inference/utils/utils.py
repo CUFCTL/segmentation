@@ -20,7 +20,7 @@ color_maps = {
         [  0, 80,100], # train
         [  0,  0,230], # motorcycle
         [119, 11, 32], # bicyle 
-        [  0,  0,  0], # void
+        #[  0,  0,  0], # void
     ],
     'rellis': [
         [0, 0, 0], # void

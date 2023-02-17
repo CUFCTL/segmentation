@@ -94,11 +94,16 @@ def preprocess(pil_img):
     return trans_img
 
 
-def preprocess_auxnet(image):
+def preprocess_auxnet(image, downsample_factor=None):
     """Preprocess an image for inference on AuxNet. 
     """
     mean = [0.485, 0.456, 0.406]
     std=[0.229, 0.224, 0.225]
+
+    H, W, _ = image.shape
+
+    if downsample_factor:
+        image = cv2.resize(image, (W//downsample_factor, H//downsample_factor), cv2.INTER_NEAREST) # INTER_LINEAR is fast and better quality but not as fast as INTER_NEAREST
 
     image = image.astype(np.float32)[:, :, ::-1]
     image = image / 255.0
@@ -122,7 +127,7 @@ def old_inference_video(session, frame):
     return pred
 
 
-def inference_video_auxnet(session, frame):
+def inference_video_auxnet(session, frame, out_dimensions):
     processed_img = preprocess(frame)
     X_ortvalue = ort.OrtValue.ortvalue_from_numpy(processed_img, 'cuda', 0)
 
@@ -133,11 +138,10 @@ def inference_video_auxnet(session, frame):
     io_binding.bind_input('input', device_type=X_ortvalue.device_name(), device_id=0, element_type=np.float32, shape=X_ortvalue.shape(), buffer_ptr=X_ortvalue.data_ptr())
     
     
-    Y_shape = (1,19,480,640)
+    Y_shape = (1, out_dimensions[2], out_dimensions[0], out_dimensions[1])
     Y_tensor = torch.empty(Y_shape, dtype=torch.float32, device='cuda:0').contiguous()
     #io_binding.bind_output('output', 'cuda')
 
-#################### Try this on main inference function 
     # Bind output directly to a tensor on a GPU
     io_binding.bind_output(
         name='output',
@@ -275,7 +279,6 @@ def main():
     # Set up ORT
     ort_session = ort.InferenceSession(model_path, providers=providers)
 
-
     # Setting up AuxNet
     AuxNet, optimizer, criterion = aux_net()
     AuxNet.train()
@@ -286,13 +289,19 @@ def main():
         video_path = args.video_path
         if args.r:
             print('Inferencing on a recorded video')
+            print(video_path)
             vid = cv2.VideoCapture(video_path)
         else:
             print('Inferencing on live video stream')
             vid = cv2.VideoCapture(0)
 
+            # Get dimensions
+        _, frame = vid.read()
+        H, W, _ = frame.shape
+        C = len(cmap)
+        out_dimensions = (H, W, C)
+
         start_t = 0
-        print(video_path)
         while(True):
             
             check, frame = vid.read()
@@ -307,13 +316,14 @@ def main():
             if k == ord('q'):
                 break
 
-            preprocessed_frame = preprocess_auxnet(frame_rgb)
-            logits_tensor = inference_video_auxnet(ort_session, frame_rgb)
+            # Factor of 2 seems to be the best (speed vs accuracy), 3 is okay as well. Anything larger and the image takes too long to downsample.
+            preprocessed_frame = preprocess_auxnet(frame_rgb, downsample_factor=2)   
+            logits_tensor = inference_video_auxnet(ort_session, frame_rgb, out_dimensions)
 
             AuxNet.zero_grad()
             prediction_aux = AuxNet(torch.from_numpy(preprocessed_frame))
             prediction_aux = F.interpolate(
-                    input=prediction_aux, size=(480, 640), mode='bilinear')
+                    input=prediction_aux, size=(out_dimensions[0], out_dimensions[1]), mode='bilinear')
 
             
             final_logits = torch.add(logits_tensor, prediction_aux)
@@ -326,7 +336,6 @@ def main():
             losses = criterion(prediction_aux, pred_combination)
             losses.backward()
             optimizer.step()
-            print(losses)
 
             # squeeze() removes all axes with length of 1 ... [1, 1080, 1920] => [1080, 1920]
             # Image modes ('P') defined here: https://pillow.readthedocs.io/en/stable/handbook/concepts.html#concept-modes
@@ -355,11 +364,11 @@ def main():
             box_color = (27, 122, 251)
             font = cv2.FONT_HERSHEY_SIMPLEX
             cv2.rectangle(combined_image, (4, 2), (180,35), box_color, -1)
-            cv2.rectangle(combined_image, (644, 2), (780,35), box_color, -1)
-            cv2.rectangle(combined_image, (1284, 2), (1550,35), box_color, -1)
+            cv2.rectangle(combined_image, (out_dimensions[1]+4, 2), (out_dimensions[1]+140,35), box_color, -1)
+            cv2.rectangle(combined_image, (out_dimensions[1]*2+4, 2), (out_dimensions[1]*2+270,35), box_color, -1)
             cv2.putText(combined_image, fps_text, (5, 30), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
-            cv2.putText(combined_image, swiftnet_text, (650, 30), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
-            cv2.putText(combined_image, swiftnet_auxnet_text, (1290, 30), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
+            cv2.putText(combined_image, swiftnet_text, (out_dimensions[1]+10, 30), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
+            cv2.putText(combined_image, swiftnet_auxnet_text, (out_dimensions[1]*2+10, 30), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
             cv2.imshow('frame', combined_image)
     elif mode == 'image':
         print('Inferencing on an image')
