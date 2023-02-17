@@ -318,6 +318,7 @@ def main():
 
             # Factor of 2 seems to be the best (speed vs accuracy), 3 is okay as well. Anything larger and the image takes too long to downsample.
             preprocessed_frame = preprocess_auxnet(frame_rgb, downsample_factor=2)   
+            #print(preprocessed_frame.shape)
             logits_tensor = inference_video_auxnet(ort_session, frame_rgb, out_dimensions)
 
             AuxNet.zero_grad()
