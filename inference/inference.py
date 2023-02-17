@@ -105,7 +105,7 @@ def old_inference_video(session, frame):
     return pred
 
 
-def inference_video(session, frame):
+def inference_video(session, frame, output_dimensions):
     processed_img = preprocess(frame)
     X_ortvalue = ort.OrtValue.ortvalue_from_numpy(processed_img, 'cuda', 0)
 
@@ -118,7 +118,7 @@ def inference_video(session, frame):
     
     # Allocate GPU tensor so we can perform argmax on GPU
     # (This did not speed it up much at all but it is more logical)
-    Y_shape = (1,19,480,640)
+    Y_shape = (1, output_dimensions[2], output_dimensions[0], output_dimensions[1])
     Y_tensor = torch.empty(Y_shape, dtype=torch.float32, device='cuda:0').contiguous()
     io_binding.bind_output(
         name='output',
@@ -135,7 +135,7 @@ def inference_video(session, frame):
     return pred
 
 
-def inference_image(session, image):
+def inference_image(session, image, output_dimensions):
     start = time.time()
     processed_img = preprocess(image)
     X_ortvalue = ort.OrtValue.ortvalue_from_numpy(processed_img, 'cuda', 0)
@@ -144,7 +144,7 @@ def inference_image(session, image):
 
     io_binding = session.io_binding()
     io_binding.bind_input('input', device_type=X_ortvalue.device_name(), device_id=0, element_type=np.float32, shape=X_ortvalue.shape(), buffer_ptr=X_ortvalue.data_ptr())
-    Y_shape = (1,19,480,640)
+    Y_shape = (1, output_dimensions[2], output_dimensions[0], output_dimensions[1])
     Y_tensor = torch.empty(Y_shape, dtype=torch.float32, device='cuda:0').contiguous()
     io_binding.bind_output(
         name='output',
@@ -160,7 +160,6 @@ def inference_image(session, image):
     _, pred = torch.max(Y_tensor, dim=1)
     return pred
     
-    return pred
 
 
 def old_inference_image(session, image):
@@ -236,6 +235,7 @@ def main():
         check, frame = vid.read()
 
         H, W, C = frame.shape
+
         legend = np.full((H, 120, C), 255).astype(np.uint8)
 
         # Create legend for final visualization
@@ -248,16 +248,16 @@ def main():
             y1 += 20
             y2 += 20
 
+        # Define output shape
+        out_C = len(cmap)
+        out_dimensions = (H, W, out_C)
 
         start_t = 0
-        running_fps = 0
-        num_frames = 0
         while(True):
             check, frame = vid.read()
             # Check if frame exists before processing - some of the Go Pro video frames were corrupted
             if not check:
                 continue
-            num_frames += 1
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB) # IMPORTANT: do not forget to convert to RGB before inferencing
             
             k = cv2.waitKey(10)
@@ -265,7 +265,7 @@ def main():
             # Exit video stream by pressing 'q'
             if k == ord('q'):
                 break
-            prediction = inference_video(ort_session, frame_rgb)
+            prediction = inference_video(ort_session, frame_rgb, out_dimensions)
             # squeeze() removes all axes with length of 1 ... [1, 1080, 1920] => [1080, 1920]
             # Image modes ('P') defined here: https://pillow.readthedocs.io/en/stable/handbook/concepts.html#concept-modes
             prediction_pil = Image.fromarray(prediction.cpu().numpy().squeeze().astype(np.uint8)).convert('P')
