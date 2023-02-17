@@ -326,6 +326,7 @@ def main():
             losses = criterion(prediction_aux, pred_combination)
             losses.backward()
             optimizer.step()
+            print(losses)
 
             # squeeze() removes all axes with length of 1 ... [1, 1080, 1920] => [1080, 1920]
             # Image modes ('P') defined here: https://pillow.readthedocs.io/en/stable/handbook/concepts.html#concept-modes
@@ -347,6 +348,8 @@ def main():
 
             # TODO
             # Downsample input image to auxadapt
+            # Test on outside_riggs.mp4 video
+            # Some other stuff
 
             # BGR
             box_color = (27, 122, 251)
