@@ -4,6 +4,10 @@ This is our semantic segmentation pipeline for the VIPR project. The repository 
 ### Inference Preview
 https://user-images.githubusercontent.com/34605638/203414948-aea30ddd-0e74-461a-bdc0-b607b3e82f7b.mp4
 
+### [AuxAdapt](https://arxiv.org/abs/2110.12369) Method to Increase Temporal Consistency (Reduce Flickering)
+https://user-images.githubusercontent.com/34605638/221031086-697691a9-6ca3-444f-ba01-b774c152d0e4.mp4
+
+
 ## Table of Contents
 * [Launching the Docker Container](#launching-the-docker-container)
 * [Deploying the Docker Container on the Husky](#deploying-the-docker-container-on-the-husky)
