@@ -20,7 +20,7 @@ docker pull bselee/vipr-segmentation:1.0
 # **  Documentation still in progress **
 
 ## Deploying the Docker Container on the Husky
-The docker container for general usage is slightly different than the docker container for the Husky robot. The main difference is the Husky docker container contains an ```inference/inference-ros.py``` script which instantiates the ROS node, subscribes to the compressed image ROS topic, and converts the image to work with OpenCV. This file is not in this GitHub repository at the moment, __in the future we should add it__. This means that to modify the inference-ros.py Husky docker container we need to modify the container directly and cannot use the Dockerfile. Instructions to modify this will be explained after the deployment instructions.
+The docker container for general usage is slightly different than the docker container for the Husky robot. The main difference is the Husky docker container contains an ```inference/inference-ros.py``` script which instantiates the ROS node, subscribes to the compressed image ROS topic, and converts the image to work with OpenCV. This file is not in this GitHub repository at the moment, __in the future we should add it__. This means that to modify the ```inference-ros.py``` Husky docker container we need to modify the container directly and cannot use the Dockerfile. Instructions to modify this will be explained after the deployment instructions.
 
 To launch the docker container on the Husky, first pull the container on a laptop connected to the Husky's network:
 ```bash
