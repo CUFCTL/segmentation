@@ -11,12 +11,13 @@ https://user-images.githubusercontent.com/34605638/221033265-8567c556-dfa6-4b9b-
 * [Overview](#overview)
 * [Local Setup and Development](#local-setup-and-development)
 * [Deploying the Docker Container on the Husky](#deploying-the-docker-container-on-the-husky)
+* [Preparing Datsets](#preparing-datasets)
 
 ## Overview
 TODO
 
 ## Local Setup and Development
-If you just want to run the general usage docker container, proceed to 
+This section covers setting up the project on a local machine for development and running the project in a docker container. If you just want to run the general usage docker container, proceed to [Launching the Docker Container](#launching-the-docker-container).
 
 ### Installation
 Clone the git repository
@@ -28,10 +29,28 @@ git clone https://github.com/CUFCTL/segmentation.git
 Create a virtual environment with the required dependencies and activate it.
 ```bash
 conda env create -f environment.yml
+source activate segmentation
 ```
 
+### Features (Maybe delete this section or reword it)
+After cloning the repository and setting up an Anaconda environment, you should have everything you need to run, modify, and create new features in this project. Remember to create a new branch everytime you modify or crete a new feature.
 
-### Launching the Docker Container
+The main uses of this project is to train/evaluate a semantic segmentation model and then perform inference on a live video stream.
+
+### Training the model
+TODO
+
+### Testing the model
+TODO
+
+### Converting to ONNX format
+TODO
+
+### Inference on a live video feed
+TODO
+
+
+### Launching the Docker Container (maybe put this section in a different order)
 The GPU enabled docker container has all the dependencies for this project so the user only needs [Docker](https://docs.docker.com/engine/install/ubuntu/) and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) (nvidia-docker2) installed. NVIDIA does not currently support GPU use in docker containers on Windows so these instructions are __only for Linux__. NVIDIA does offer very good suport for GPU Docker usage with WSL 2, however, this project has not been tested on it. Lastly, the GPU must support [compute capability](https://developer.nvidia.com/cuda-gpus) 6.0 or higher due to PyTorch constraints.
 ```bash
 docker pull bselee/vipr-segmentation:1.0
@@ -87,3 +106,7 @@ docker push bselee/vipr-segmentation # push the committed container to the Docke
 
 The current registry is under my Docker Hub account (bselee) but __we should probably create a registry for the FCTL lab so anyone can push to it.__
 # **  Documentation still in progress **
+
+## Preparing Datasets
+TODO
+
