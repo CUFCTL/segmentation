@@ -8,8 +8,12 @@ https://user-images.githubusercontent.com/34605638/203414948-aea30ddd-0e74-461a-
 https://user-images.githubusercontent.com/34605638/221033265-8567c556-dfa6-4b9b-be63-f7d73993a3ef.mp4
 
 ## Table of Contents
+* [Overview](#overview)
 * [Local Setup and Development](#local-setup-and-development)
 * [Deploying the Docker Container on the Husky](#deploying-the-docker-container-on-the-husky)
+
+## Overview
+TODO
 
 ## Local Setup and Development
 If you just want to run the general usage docker container, proceed to 
@@ -22,6 +26,9 @@ git clone https://github.com/CUFCTL/segmentation.git
 
 ### Anaconda environment
 Create a virtual environment with the required dependencies and activate it.
+```bash
+conda env create -f environment.yml
+```
 
 
 ### Launching the Docker Container
