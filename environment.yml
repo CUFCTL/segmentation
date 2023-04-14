@@ -1,0 +1,17 @@
+#   conda env create -f environment.yml
+name: segmentation
+channels:
+  - defaults
+dependencies:
+  - python=3.8
+  - pip
+  - onnx
+  - onnxruntime_gpu
+  - opencv-python=4.20.34
+  - cityscapesscripts
+  - Pillow
+  - tqdm
+  - pip:
+    - torch=1.13.1
+    - torchvision=0.14.1
+  
