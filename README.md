@@ -7,12 +7,24 @@ https://user-images.githubusercontent.com/34605638/203414948-aea30ddd-0e74-461a-
 ### [AuxAdapt](https://arxiv.org/abs/2110.12369) Method to Increase Temporal Consistency (Reduce Flickering)
 https://user-images.githubusercontent.com/34605638/221033265-8567c556-dfa6-4b9b-be63-f7d73993a3ef.mp4
 
-
 ## Table of Contents
-* [Launching the Docker Container](#launching-the-docker-container)
+* [Local Setup and Development](#local-setup-and-development)
 * [Deploying the Docker Container on the Husky](#deploying-the-docker-container-on-the-husky)
 
-## Launching the Docker Container
+## Local Setup and Development
+If you just want to run the general usage docker container, proceed to 
+
+### Installation
+Clone the git repository
+```bash
+git clone https://github.com/CUFCTL/segmentation.git
+```
+
+### Anaconda environment
+Create a virtual environment with the required dependencies and activate it.
+
+
+### Launching the Docker Container
 The GPU enabled docker container has all the dependencies for this project so the user only needs [Docker](https://docs.docker.com/engine/install/ubuntu/) and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) (nvidia-docker2) installed. NVIDIA does not currently support GPU use in docker containers on Windows so these instructions are __only for Linux__. NVIDIA does offer very good suport for GPU Docker usage with WSL 2, however, this project has not been tested on it. Lastly, the GPU must support [compute capability](https://developer.nvidia.com/cuda-gpus) 6.0 or higher due to PyTorch constraints.
 ```bash
 docker pull bselee/vipr-segmentation:1.0
