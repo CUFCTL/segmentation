@@ -6,12 +6,11 @@ dependencies:
   - python=3.8
   - pip
   - onnx
-  - onnxruntime_gpu
-  - opencv-python=4.20.34
-  - cityscapesscripts
+  - onnxruntime-gpu
   - Pillow
   - tqdm
   - pip:
     - torch=1.13.1
     - torchvision=0.14.1
-  
+    - cityscapesscripts
+    - opencv-python=4.1.2.30
