@@ -10,6 +10,8 @@ https://user-images.githubusercontent.com/34605638/221033265-8567c556-dfa6-4b9b-
 ## Table of Contents
 * [Overview](#overview)
 * [Local Setup and Development](#local-setup-and-development)
+* [Launching the Docker Container](#launching-the-docker-container)
+* [Features](#features)
 * [Deploying the Docker Container on the Husky](#deploying-the-docker-container-on-the-husky)
 * [Preparing Datsets](#preparing-datasets)
 
@@ -17,7 +19,7 @@ https://user-images.githubusercontent.com/34605638/221033265-8567c556-dfa6-4b9b-
 TODO
 
 ## Local Setup and Development
-This section covers setting up the project on a local machine for development and running the project in a docker container. If you just want to run the general usage docker container, proceed to [Launching the Docker Container](#launching-the-docker-container).
+This section covers setting up the project on a local machine for development and running the project in a docker container. If you just want to run the general usage docker container, to [Launching the Docker Container](#launching-the-docker-container).
 
 ### Installation
 Clone the git repository
@@ -32,10 +34,30 @@ conda env create -f environment.yml
 source activate segmentation
 ```
 
-### Features (Maybe delete this section or reword it)
-After cloning the repository and setting up an Anaconda environment, you should have everything you need to run, modify, and create new features in this project. Remember to create a new branch everytime you modify or crete a new feature.
+## Launching the Docker Container
+The GPU-enabled docker container has all the dependencies for this project so the user only needs [Docker](https://docs.docker.com/engine/install/ubuntu/) and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) (nvidia-docker2) installed. NVIDIA does not currently support GPU use in docker containers on Windows so these instructions are __only for Linux__. NVIDIA does offer very good suport for GPU Docker usage with WSL 2, however, this project has not been tested on it. Lastly, the GPU must support [compute capability](https://developer.nvidia.com/cuda-gpus) 6.0 or higher due to PyTorch constraints.
 
+First, clone the GitHub repository if you have not done so already.
+```bash
+git clone https://github.com/CUFCTL/segmentation.git
+cd segmentation
+```
+
+Then, pull the general usage docker container.
+```bash
+docker pull bselee/vipr-segmentation:1.0
+```
+When the docker conainter is exited, it is automatically deleted by the ```--rm``` flag in the ```docker_run.sh``` script.
+
+The docker container can now be started with
+```bash
+docker pull bselee/vipr-segmentation:1.0
+```
+
+## Features
 The main uses of this project is to train/evaluate a semantic segmentation model and then perform inference on a live video stream.
+
+After cloning the repository and setting up an Anaconda environment or docker container, you should have everything you need to run, modify, and create new features in this project. Remember to create a new branch everytime you modify or create a new feature.
 
 ### Training the model
 TODO
@@ -49,13 +71,6 @@ TODO
 ### Inference on a live video feed
 TODO
 
-
-### Launching the Docker Container (maybe put this section in a different order)
-The GPU enabled docker container has all the dependencies for this project so the user only needs [Docker](https://docs.docker.com/engine/install/ubuntu/) and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) (nvidia-docker2) installed. NVIDIA does not currently support GPU use in docker containers on Windows so these instructions are __only for Linux__. NVIDIA does offer very good suport for GPU Docker usage with WSL 2, however, this project has not been tested on it. Lastly, the GPU must support [compute capability](https://developer.nvidia.com/cuda-gpus) 6.0 or higher due to PyTorch constraints.
-```bash
-docker pull bselee/vipr-segmentation:1.0
-```
-# **  Documentation still in progress **
 
 ## Deploying the Docker Container on the Husky
 The docker container for general usage is slightly different than the docker container for the Husky robot. The main difference is the Husky docker container contains an ```inference/inference-ros.py``` script which instantiates the ROS node, subscribes to the compressed image ROS topic, and converts the image to work with OpenCV. This file is not in this GitHub repository at the moment, __in the future we should add it__. This means that to modify the ```inference-ros.py``` Husky docker container we need to modify the container directly and cannot use the Dockerfile. Instructions to modify this will be explained after the deployment instructions.
