@@ -4,15 +4,15 @@ This is our semantic segmentation pipeline and LiDAR point cloud pipeline for th
 
 ## Table of Contents
 * [Overview](#overview)
-* [Local Setup and Development](#local-setup-and-development)
-* [Deploying the Docker Container on the Husky](#deploying-the-docker-container-on-the-husky)
+* [Setup and Deployment](#setup-and-development)
 * [Preparing Datsets](#preparing-datasets)
+* [Training](#Training-the-model)
 
 ## Overview
 
 ### Installation
 
-
+###
 
 ### Features (Maybe delete this section or reword it)
 ain uses of this project is to train/evaluate a semantic segmentation model and then perform inference on a live video stream.
