@@ -47,12 +47,24 @@ Then, pull the general usage docker container.
 ```bash
 docker pull bselee/vipr-segmentation:1.0
 ```
-When the docker conainter is exited, it is automatically deleted by the ```--rm``` flag in the ```docker_run.sh``` script.
 
 The docker container can now be started with
 ```bash
-docker pull bselee/vipr-segmentation:1.0
+./docker_run.sh
 ```
+When the docker conainter is exited, it is automatically deleted by the ```--rm``` flag in the ```docker_run.sh``` script.
+
+### Modifying the Docker Container
+The easiest way to modify the docker container is to first make the changes locally in the project repository, then build the Dockerfile.
+```bash
+docker build -t bselee/vipr-segmentation:1.0 .
+```
+
+After testing the new docker image, you can push it to Docker Hub with
+```bash
+docker push bselee/vipr-segmentation:1.0
+```
+
 
 ## Features
 The main uses of this project is to train/evaluate a semantic segmentation model and then perform inference on a live video stream.
