@@ -11,11 +11,13 @@ RUN apt update
 RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata
 RUN apt install ffmpeg libsm6 libxext6 -y
 
+# numpy 1.24 does not yet work with onnx so install 1.23
 RUN pip install \
         onnx \
         onnxruntime-gpu \
         tqdm \
         cityscapesscripts \
+        numpy==1.23.4 \
         opencv-python==4.1.2.30
 
 # Copying source files after installing dependcies to prevent long rebuilds
