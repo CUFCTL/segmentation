@@ -81,7 +81,10 @@ TODO
 TODO
 
 ### Inference on a live video feed
-TODO
+```bash
+cd inference
+./run.sh
+```
 
 
 ## Deploying the Docker Container on the Husky
