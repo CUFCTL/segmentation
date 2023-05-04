@@ -31,6 +31,9 @@ labelIDs = condensed_labelIDs;
 cmap = condensed_cmap;
 at the bottom of the first section where the classes get defined.
 
+![Alt text](images/cond_img.jpg)
+
+
 To train the model on fused LiDAR and RGB data you first need to create a train and test set of the depth images. Run the lidar_rellis.m file and provide the correct paths to the point clouds and the images.  This will create a folder of depth images for the training and testing. Next the NN model will require some modification to be able to run these new images.  Load in the Rellis model into the workspace then open the Deep Network Designer tool.  Next load the model in this tool and you will need to create two new layers to replace the first two.  First create a new imageInputLayer and make the input size 1200,1920,4 to accept the new depth layer.  Then create a conv2dLayer and replace the top two default layers with these new ones. After this change the image size varable in the train.m from [1200 1920 3] to [1200 1920 4]. The rest of the train and test will run normally.
 
 
