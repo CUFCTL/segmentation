@@ -84,6 +84,7 @@ To train the model on fused LiDAR and RGB data you first need to create a train 
 
 Next the NN model will require some modification to be able to run these new images.  Load in the Rellis model into the workspace then open the Deep Network Designer tool.  Next load the model in this tool and you will need to create two new layers to replace the first two.  First create a new imageInputLayer and make the input size 1200,1920,4 to accept the new depth layer.  Then create a conv2dLayer and replace the top two default layers with these new ones. After this change the image size varable in the train.m from [1200 1920 3] to [1200 1920 4]. The rest of the train and test will run normally.
 
+![Alt text](images/network.png)
 
 ### Testing the model
 The second half of the train.m script contains the testing functions.  First it will show you a image from the test set which has been segmentated and overlayed with a colormap to show the infrence.  It will then show the auctal against the expected segmentation as a comparison with the GT. Next it will calculate the jaccard index which is the miou score and display the mean iou and the iou for each indivigual class.  Next it runs over the test set again and generates all of the class metrics. Then it performs a timing test, the model will loop through and infrence on the test set and be timed to get a average infrence time of the model.  The remaining segments allow for testing of single images or generating graphs like confusion matrices.
