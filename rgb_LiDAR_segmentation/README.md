@@ -18,7 +18,7 @@ These scripts are runned in matlabR2022a and require computer vision and deep le
 ### Features
 This projects features is to train/evaluate a semantic segmentation model for the rellis-3d dataset.  This is able to condense classes of the set and utalize both its rgb image data and LiDAR point cloud data for the segmentation.
 
-![Alt text](/image/point_cloud.jpg)
+![Alt text](/images/point_cloud.jpg)
 
 ### Training the model
 To train the model you need to run the train.m file and provide a path to the saved rellis-3d dataset. This will run the normal image segmentation without LiDAR.
