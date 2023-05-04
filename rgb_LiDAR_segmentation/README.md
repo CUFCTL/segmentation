@@ -20,6 +20,7 @@ This projects features is to train/evaluate a semantic segmentation model for th
 
 ![Alt text](images/point_cloud.jpg)
 ![Alt text](images/raw_img.jpg)
+![Alt text](images/color_img.jpg)
 
 ### Training the model
 To train the model you need to run the train.m file and provide a path to the saved rellis-3d dataset. This will run the normal image segmentation without LiDAR.
