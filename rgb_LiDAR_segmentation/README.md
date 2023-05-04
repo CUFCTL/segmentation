@@ -22,7 +22,7 @@ This projects features is to train/evaluate a semantic segmentation model for th
 ![Alt text](images/raw_img.jpg)
 ![Alt text](images/color_img.png)
 
-classes:
+classes=
 "void"
 "dirt"
 "grass"
@@ -57,14 +57,20 @@ at the bottom of the first section where the classes get defined.
 
 ![Alt text](images/cond_img.jpg)
 
-condensed_classes:
+condensed_classes=
 "sky"
 "traversable"
 "non-traversable"
 "obstacles"
 
 
+sky = sky
 
+traversable = "grass" "dirt" "asphalt" "concrete" "puddle" "mud" 
+
+non-traversable = "void" "water" "bush" "rubble"
+    
+obstacles = "vehicle" "barrier" "log" "pole" "object" "building" "person" "fence" "Tree"
 
 
 
