@@ -1,138 +1,6 @@
 
 resnet18();
 
-pretrainedURL = 'https://www.mathworks.com/supportfiles/vision/data/deeplabv3plusResnet18CamVid.mat';
-pretrainedFolder = fullfile(tempdir,'pretrainedNetwork');
-pretrainedNetwork = fullfile(pretrainedFolder,'deeplabv3plusResnet18CamVid.mat'); 
-if ~exist(pretrainedNetwork,'file')
-    mkdir(pretrainedFolder);
-    disp('Downloading pretrained network (58 MB)...');
-    websave(pretrainedNetwork,pretrainedURL);
-end
-
-imageURL = 'http://web4.cs.ucl.ac.uk/staff/g.brostow/MotionSegRecData/files/701_StillsRaw_full.zip';
-labelURL = 'http://web4.cs.ucl.ac.uk/staff/g.brostow/MotionSegRecData/data/LabeledApproved_full.zip';
- 
-outputFolder = fullfile(tempdir,'CamVid'); 
-labelsZip = fullfile(outputFolder,'labels.zip');
-imagesZip = fullfile(outputFolder,'images.zip');
-
-if ~exist(labelsZip, 'file') || ~exist(imagesZip,'file')   
-    mkdir(outputFolder)
-       
-    disp('Downloading 16 MB CamVid dataset labels...'); 
-    websave(labelsZip, labelURL);
-    unzip(labelsZip, fullfile(outputFolder,'labels'));
-    
-    disp('Downloading 557 MB CamVid dataset images...');  
-    websave(imagesZip, imageURL);       
-    unzip(imagesZip, fullfile(outputFolder,'images'));    
-end
-
-
-imgDir = fullfile(outputFolder,'images','701_StillsRaw_full');
-imds = imageDatastore(imgDir);
-I = readimage(imds,559);
-I = histeq(I);
-imshow(I)
-
-
-
-classes = [
-    "Sky"
-    "Building"
-    "Pole"
-    "Road"
-    "Pavement"
-    "Tree"
-    "SignSymbol"
-    "Fence"
-    "Car"
-    "Pedestrian"
-    "Bicyclist"
-    ];
-
-
-labelIDs = camvidPixelLabelIDs();
-labelDir = fullfile(outputFolder,'labels');
-pxds = pixelLabelDatastore(labelDir,classes,labelIDs);
-
-C = readimage(pxds,559);
-cmap = camvidColorMap;
-B = labeloverlay(I,C,'ColorMap',cmap);
-figure
-imshow(B)
-pixelLabelColorbar(cmap,classes);
-tbl = countEachLabel(pxds)
-frequency = tbl.PixelCount/sum(tbl.PixelCount);
-
-%%
-[imdsTrain, imdsVal, imdsTest, pxdsTrain, pxdsVal, pxdsTest] = partitionCamVidData(imds,pxds);
-numTrainingImages = numel(imdsTrain.Files)
-
-numValImages = numel(imdsVal.Files)
-numTestingImages = numel(imdsTest.Files)
-% Specify the network image size. This is typically the same as the traing image sizes.
-
-imageSize = [720 960 3];
-% Specify the number of classes.
-numClasses = numel(classes);
-
-lgraph = deeplabv3plusLayers(imageSize, numClasses, "resnet18");
-
-imageFreq = tbl.PixelCount ./ tbl.ImagePixelCount;
-classWeights = median(imageFreq) ./ imageFreq
-
-pxLayer = pixelClassificationLayer('Name','labels','Classes',tbl.Name,'ClassWeights',classWeights);
-lgraph = replaceLayer(lgraph,"classification",pxLayer);
-
-pximdsVal = pixelLabelImageDatastore(imdsVal,pxdsVal);
-
-
-% Define training options. 
-options = trainingOptions('sgdm', ...
-    'LearnRateSchedule','piecewise',...
-    'LearnRateDropPeriod',10,...
-    'LearnRateDropFactor',0.3,...
-    'Momentum',0.7, ...
-    'InitialLearnRate',1e-2, ...
-    'L2Regularization',0.005, ...
-    'ValidationData',pximdsVal,...
-    'MaxEpochs',10, ...  
-    'MiniBatchSize',8, ...
-    'Shuffle','every-epoch', ...
-    'CheckpointPath', tempdir, ...
-    'VerboseFrequency',2,...
-    'Plots','training-progress',...
-    'ValidationPatience', 4, ...
-    'ExecutionEnvironment','gpu');
-
-
-augmenter = imageDataAugmenter('RandXReflection',true,...
-    'RandXTranslation',[-10 10],'RandYTranslation',[-10 10]);
-
-pximds = pixelLabelImageDatastore(imdsTrain,pxdsTrain, ...
-    'DataAugmentation',augmenter);
-
-
-doTraining = false;
-if doTraining    
-    [net, info] = trainNetwork(pximds,lgraph,options);
-else
-    data = load(pretrainedNetwork); 
-    netRes = data.net;
-end
-
-%%
-I = readimage(imdsTest,15);
-C = semanticseg(I, net);
-
-B = labeloverlay(I,C,'Colormap',cmap,'Transparency',0.4);
-figure
-imshow(B)
-pixelLabelColorbar(cmap, classes);
-
-
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -162,6 +30,12 @@ classes = [
 "rubble"
 ];
 
+condensed_classes = [
+"sky"
+"traversable"
+"non-traversable"
+"obstacles"
+];
     
 labelIDs = { ...
 
@@ -247,6 +121,10 @@ labelIDs = { ...
     
 };
 
+
+
+
+
 cmap = [
     0 0 0 % "void"
     108 64 20 % "dirt"
@@ -272,6 +150,67 @@ cmap = [
 
 % Normalize between [0 1].
 cmap = cmap ./ 255;
+
+condensed_classes = [
+"sky"
+"traversable"
+"nonTraversable"
+"obstacles"
+];
+
+condensed_labelIDs = { ...
+    % "sky
+    [
+    0 0 255; ... % "sky
+    ] 
+
+    % "traversable"
+    [
+    0 102 0; ... % grass
+    108 64 20; ... % "dirt"
+    64 64 64; ... % "asphalt"
+    170 170 170; ... % "concrete"
+    134 255 239; ... % "puddle"
+    99 66 34; ... % "mud"
+    0 128 255; ... % "water"
+    ]
+
+    % "non-traversable"
+    [
+    
+    0 0 0; ... % "void"
+    
+    ]
+    
+    % "obstacles"
+    [
+    255 255 0; ... % "vehicle"
+    41 121 255; ... % "barrier"
+    102 0 0; ... % "log"
+    0 153 153; ... %pole
+    255 0 127; ... % "object"
+    255 0 0; ... % "building"
+    204 153 255; ... % "person"
+    102 0 204; ... % "fence"
+    0 255 0; ... % "Tree"
+    110 22 138; ... % "rubble"
+    255 153 204; ... % "bush"
+    ]
+};
+
+condensed_cmap = [
+    255 0 0 % "sky"
+    0 255 0 % "traversable"
+    0 0 255 % "non-traversable"
+    255 255 0 % "obstacles"
+];
+
+condensed_cmap = condensed_cmap ./ 255;
+
+
+classes = condensed_classes;
+labelIDs = condensed_labelIDs;
+cmap = condensed_cmap;
 
 
 %my_gt = 'C:\Users\max\Documents\MATLAB\vipr\resize_labels\'
