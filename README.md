@@ -66,27 +66,74 @@ After testing the new docker image, you can push it to Docker Hub with
 docker push bselee/vipr-segmentation:1.0
 ```
 
-
 ## Features
 The main uses of this project is to train/evaluate a semantic segmentation model and then perform inference on a live video stream.
 
 After cloning the repository and setting up an Anaconda environment or docker container, you should have everything you need to run, modify, and create new features in this project. Remember to create a new branch everytime you modify or create a new feature.
 
 ### Training the model
-TODO
+Training a model is performed in the network specific directory, for example ```models/swiftnet/```
+
+Modify a few variables in ```configs/rn18_pyramid.py```
+ - set ```evaluting=False```
+ - set ```live_video=False```
+ - set the ```target_size``` and ```target_size_feats``` to the shape of the image 
+   (usually the full size of the image)
+ - set the ```root``` variable to the dataset root directory
+ - set the desired batch size and number epochs (default epochs:250)
+
+Begin training either by running the ```train.py``` file directly or running the ```train.sh``` bash script:
+```bash
+python train.py configs/rn18_pyramid_rellis.py --store_dir=weights
+```
+or
+```bash
+bash train.sh
+```
 
 ### Testing the model
-TODO
+Training a model is performed in the network specific directory, for example ```models/swiftnet/```
+
+Modify a few variables in ```configs/rn18_pyramid.py```
+ - set ```evaluting=True```
+ - set ```live_video=False```
+ - set the ```target_size``` and ```target_size_feats``` to the shape of the image 
+   (usually the full size of the image)
+ - set the ```root``` variable to the dataset root directory
+ - set the desired batch size and number epochs (default epochs:250)
+
+Begin training either by running the ```train.py``` file directly or running the ```train.sh``` bash script:
+```bash
+python train.py configs/rn18_pyramid_rellis.py --store_dir=weights
+```
+or
+```bash
+bash train.sh
+```
+
 
 ### Converting to ONNX format
+Converting a model to ONNX format is performed in the network specific directory, for example ```models/swiftnet/```
+```bash
+cd models/swiftnet/
+```
 
+Modify a few variables in ```configs/rn18_pyramid.py```
+ - set ```evaluating = True``` 
+ - set ```model_path``` variable to the .pt weight file to convert
+
+Convert the model to ONNX format by specifying the config file, output onnx file name, and the height/width of the desired inference images:
+```bash
+python convert_to_onnx.py configs/rn18_pyramid.py model.onnx --height 480 --width 640
+```
+
+If you wish to inference on different resolution images, a new ONNX file must be created.
 
 ### Inference on a live video feed
 ```bash
 cd inference
 ./run.sh
 ```
-
 
 ## Deploying the Docker Container on the Husky
 The docker container for general usage is slightly different than the docker container for the Husky robot. The main difference is the Husky docker container contains an ```inference/inference-ros.py``` script which instantiates the ROS node, subscribes to the compressed image ROS topic, and converts the image to work with OpenCV. This file is not in this GitHub repository at the moment, __in the future we should add it__. This means that to modify the ```inference-ros.py``` Husky docker container we need to modify the container directly and cannot use the Dockerfile. Instructions to modify this will be explained after the deployment instructions.
