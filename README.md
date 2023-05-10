@@ -8,14 +8,15 @@ https://user-images.githubusercontent.com/34605638/203414948-aea30ddd-0e74-461a-
 https://user-images.githubusercontent.com/34605638/221033265-8567c556-dfa6-4b9b-be63-f7d73993a3ef.mp4
 
 ## Table of Contents
-* [Overview](#overview)
+* [File Structure](#file-structure)
 * [Local Setup and Development](#local-setup-and-development)
 * [Launching the Docker Container](#launching-the-docker-container)
 * [Features](#features)
 * [Deploying the Docker Container on the Husky](#deploying-the-docker-container-on-the-husky)
 * [Preparing Datsets](#preparing-datasets)
+* [Publications](#publications)
 
-## Overview
+## File Structure
 TODO
 
 ## Local Setup and Development
@@ -78,7 +79,7 @@ TODO
 TODO
 
 ### Converting to ONNX format
-TODO
+
 
 ### Inference on a live video feed
 ```bash
@@ -139,4 +140,17 @@ The current registry is under my Docker Hub account (bselee) but __we should pro
 
 ## Preparing Datasets
 TODO
+
+## Publications
+[Semantic Segmentation with High Inference Speed in Off-Road Environments](https://www.sae.org/publications/technical-papers/content/2023-01-0868/)
+<br>B Selee, M Faykus, M Smith
+<br>SAE Technical Paper
+
+[Utilizing Neural Networks for Semantic Segmentation on RGB/LiDAR Fused Data for Off-road Autonomous Military Vehicle Perception](https://www.sae.org/publications/technical-papers/content/2023-01-0740/)
+<br>MH Faykus, B Selee, M Smith
+<br>SAE Technical Paper
+
+[Lossy Compression to Reduce Latency of Local Image Transfer for Autonomous Off-Road Perception Systems](https://ieeexplore.ieee.org/abstract/document/10020267)
+<br>MH Faykus, B Selee, JC Calhoun, MC Smith
+<br>2022 IEEE International Conference on Big Data (Big Data), 3146-3152
 
