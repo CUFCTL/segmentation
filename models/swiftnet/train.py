@@ -18,7 +18,7 @@ To train the model on a train set:
     - In configs/rn18_pyramid.py set the root variable to the dataset root directory
     - Set the desired batch size and number epochs (default epochs:250)
     
-Usage: bash eval.sh
+Usage: bash train.sh
 """
 import argparse 
 import os 
