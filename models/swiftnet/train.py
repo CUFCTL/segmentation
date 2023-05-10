@@ -10,7 +10,7 @@
 """train.py
 Main training script.
 
-To train the model on a validation/test set:
+To train the model on a train set:
     - In configs/rn18_pyramid.py set evaluting=False
     - In configs/rn18_pyramid.py set live_video=False 
     - In configs/rn18_pyramid.py set the target_size and target_size_feats to the shape of the image 
