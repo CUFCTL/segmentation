@@ -99,7 +99,7 @@ Modify a few variables in ```configs/rn18_pyramid.py```
  - set ```live_video=False```
  - set the ```target_size``` and ```target_size_feats``` to the shape of the image 
    (usually the full size of the image)
- - set the ```root``` variable to the dataset root directory
+ - set ```model_path``` to the file path of trained model to inference on
  - set the desired batch size and number epochs (default epochs:250)
 
 Begin training either by running the ```train.py``` file directly or running the ```train.sh``` bash script:
