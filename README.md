@@ -100,15 +100,14 @@ Modify a few variables in ```configs/rn18_pyramid.py```
  - set the ```target_size``` and ```target_size_feats``` to the shape of the image 
    (usually the full size of the image)
  - set ```model_path``` to the file path of trained model to inference on
- - set the desired batch size and number epochs (default epochs:250)
 
 Begin training either by running the ```train.py``` file directly or running the ```train.sh``` bash script:
 ```bash
-python train.py configs/rn18_pyramid_rellis.py --store_dir=weights
+python eval.py --timing configs/rn18_pyramid.py static
 ```
 or
 ```bash
-bash train.sh
+bash eval.sh
 ```
 
 
