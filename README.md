@@ -18,7 +18,7 @@ https://user-images.githubusercontent.com/34605638/221033265-8567c556-dfa6-4b9b-
 
 ## File Structure
 	.
-	├── inference                 # Live inference for `.onnx` files
+	├── inference                 # Live inference for .onnx files
 	├── models                    # Train/test segmentation models (e.g., SwiftNet)
 	├── rgb_LiDAR_segmentation    # DeepLabV3+ with RGB/LiDAR fusion (written by Max in MATLAB)
 	├── scripts                   # Helper scripts disconnected from the pipeline
