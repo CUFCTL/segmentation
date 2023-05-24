@@ -17,7 +17,16 @@ https://user-images.githubusercontent.com/34605638/221033265-8567c556-dfa6-4b9b-
 * [Publications](#publications)
 
 ## File Structure
-TODO
+	.
+	├── inference                 # Live inference for `.onnx` files
+	├── models                    # Train/test segmentation models (e.g., SwiftNet)
+	├── rgb_LiDAR_segmentation    # DeepLabV3+ with RGB/LiDAR fusion (written by Max in MATLAB)
+	├── scripts                   # Helper scripts disconnected from the pipeline
+	├── testing                   # Archive of files which were never integrated into the pipeline (these should not be used)
+	├── Dockerfile
+	├── docker_run.sh	      # Script to run the local docker container
+	└── environment.yml	      # File to setup the anaconda environment
+
 
 ## Local Setup and Development
 This section covers setting up the project on a local machine for development and running the project in a docker container. If you just want to run the general usage docker container, to [Launching the Docker Container](#launching-the-docker-container).
