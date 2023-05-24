@@ -191,10 +191,9 @@ docker push bselee/vipr-segmentation # push the committed container to the Docke
 ```
 
 The current registry is under my Docker Hub account (bselee) but __we should probably create a registry for the FCTL lab so anyone can push to it.__
-# **  Documentation still in progress **
 
 ## Preparing Datasets
-TODO
+TODO: write instructions on how to prepare Rellis-3D and Cityscapes before training
 
 ## Publications
 [Semantic Segmentation with High Inference Speed in Off-Road Environments](https://www.sae.org/publications/technical-papers/content/2023-01-0868/)
