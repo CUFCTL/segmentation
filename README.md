@@ -1,3 +1,5 @@
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/semantic-segmentation-with-high-inference/semantic-segmentation-on-rellis-3d-da
+
 # Semantic Segmentation for the VIPR Project
 This is our semantic segmentation pipeline for the VIPR project. The repository is capable of training/evaluating semantic segmentation models, generating ONNX files, and performing live inference on a camera feed. Inference supports live video feed, a recorded `.mp4` video, and a single image. Due to the many dependencies, and the requirements of ROS, setup instructions are only included for Docker (GPU enabled).
 
